@@ -6,7 +6,7 @@ import pandas as pd
 if __name__ == '__main__':
     data = pd.read_csv(os.path.join('safebooru', 'all_data.csv'))
     tag_list = ['solo', 'white_background']
-    ignore = []
+    ignore = ['pokemon', 'chibi']
     checks = len(tag_list)
 
     parsed_ids = []
@@ -22,8 +22,10 @@ if __name__ == '__main__':
                 tag_check += 1
             if tag_check == checks:
                 parsed_ids.append(i)
+                continue
 
     parsed_data = data.iloc[parsed_ids]
+    parsed_data.to_csv(os.path.join('safebooru', 'all_data.csv'))
     exit()
 
 
