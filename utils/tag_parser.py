@@ -17,15 +17,12 @@ if __name__ == '__main__':
         tag_check = 0
         for tag in tags:
             if tag in ignore:
-                continue
+                break
             if tag in tag_list:
                 tag_check += 1
             if tag_check == checks:
                 parsed_ids.append(i)
-                continue
+                break
 
     parsed_data = data.iloc[parsed_ids]
-    parsed_data.to_csv(os.path.join('safebooru', 'all_data.csv'))
-    exit()
-
-
+    parsed_data.to_csv(os.path.join('safebooru', 'parsed_data_{}.csv'.format('_'.join(tag_list))))
