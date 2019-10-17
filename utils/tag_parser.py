@@ -2,6 +2,7 @@ import json
 import os
 import pandas as pd
 import argparse
+from tqdm import tqdm
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download images from given metadata.')
@@ -14,22 +15,30 @@ if __name__ == '__main__':
     tag_list = args.tag_list
     ignore = ['pokemon', 'chibi', 'monochrome'] + args.ignore
     checks = len(tag_list)
+    print("Loading csv")
     data = pd.read_csv(args.metadata)
+    print("Done", flush=True)
 
     parsed_ids = []
-    for i in range(len(data['id'])):
+    for i in tqdm(range(len(data['id']))):
         if data['rating'][i] != 's':
             continue
         tags = data['tags'][i].split(' ')
         tag_check = 0
+        ign = False
         for tag in tags:
             if tag in ignore:
+                ign = True
                 break
-            if tag in tag_list:
-                tag_check += 1
-            if tag_check == checks:
-                parsed_ids.append(i)
-                break
+        if not ign:
+            for tag in tags:
+                if tag in tag_list:
+                    tag_check += 1
+                if tag_check == checks:
+                    parsed_ids.append(i)
+                    break
 
     parsed_data = data.iloc[parsed_ids]
+    print("# of Collected Images : {}".format(len(parsed_data['id'])))
     parsed_data.to_csv(os.path.join(args.savedir, 'parsed_data_{}.csv'.format('_'.join(tag_list))), index=False)
+    print("File saved at {}".format(os.path.join(args.savedir, 'parsed_data_{}.csv'.format('_'.join(tag_list)))))
