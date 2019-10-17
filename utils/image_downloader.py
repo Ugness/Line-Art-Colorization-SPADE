@@ -15,13 +15,13 @@ def download(url, file):
     while tries < 5:
         try:
             response = requests.get(url, stream=True, timeout=3)
-            tries += 1
             if response.status_code == 200:
                 with open(file, 'wb') as f:
                     f.write(response.content)
             lock.release()
             return
         except:
+            tries += 1
             if tries >= 5:
                 print("Failed to Download Image {}".format(file), flush=True)
                 lock.release()
@@ -46,9 +46,9 @@ if __name__ == '__main__':
     pbar = tqdm(total=len(data['sample_url']))
     threads = []
     for i in range(len(data['sample_url'])):
+        pbar.update(1)
         url = 'http:' + data['sample_url'][i].lstrip('http:')
         file = os.path.join(savedir, '{}.png'.format(data['id'][i]))
-        pbar.update(1)
         thread = threading.Thread(target=download, kwargs={'url': url, 'file': file})
         threads.append(thread)
         thread.start()
