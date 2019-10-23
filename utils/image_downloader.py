@@ -36,7 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--metadata', type=str, metavar='*.csv', help='csv file which contains metadata(urls)')
     args = parser.parse_args()
 
-    print("Loading csv")
+    print("Loading {}".format(args.metadata))
     data = pd.read_csv(args.metadata)
     print("Done", flush=True)
     savedir = os.path.join(args.savedir, 'color')
