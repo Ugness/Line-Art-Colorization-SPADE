@@ -1,4 +1,5 @@
 from keras.models import load_model
+from keras.engine import Input, Model
 import cv2
 import numpy as np
 from helper import *
@@ -7,7 +8,16 @@ import argparse
 from tqdm import tqdm
 
 mod = load_model('mod.h5')
+# mod.summary()
+mod.layers.pop(0)
+weights = mod.get_weights()
 
+# mod.summary()
+new_input = Input(shape=(None, None, 1))
+new_output = mod(new_input)
+new_mod = Model(new_input, new_output)
+new_mod.summary()
+new_mod.layers[-1].set_weights(weights)
 
 def resize_image(size, img):
     pass
@@ -36,20 +46,20 @@ def get(path):
         new_width = 0
         new_height = 0
         if width > height:
-            from_mat = cv2.resize(from_mat, (512, int(512 / width * height)), interpolation=cv2.INTER_AREA)
-            new_width = 512
-            new_height = int(512 / width * height)
+            from_mat = cv2.resize(from_mat, (768, int(768 / width * height)), interpolation=cv2.INTER_AREA)
+            new_width = 768
+            new_height = int(768 / width * height)
         else:
-            from_mat = cv2.resize(from_mat, (int(512 / height * width), 512), interpolation=cv2.INTER_AREA)
-            new_width = int(512 / height * width)
-            new_height = 512
+            from_mat = cv2.resize(from_mat, (int(768 / height * width), 768), interpolation=cv2.INTER_AREA)
+            new_width = int(768 / height * width)
+            new_height = 768
         from_mat = from_mat.transpose((2, 0, 1))
         light_map = np.zeros(from_mat.shape, dtype=np.float)
         for channel in range(3):
             light_map[channel] = get_light_map_single(from_mat[channel])
         light_map = normalize_pic(light_map)
-        light_map = resize_img_512_3d(light_map)
-        line_mat = mod.predict(light_map, batch_size=1)
+        light_map = resize_img_768_3d(light_map)
+        line_mat = new_mod.predict(light_map, batch_size=1)
         line_mat = line_mat.transpose((3, 1, 2, 0))[0]
         line_mat = line_mat[0:int(new_height), 0:int(new_width), :]
         line_mat = np.amax(line_mat, 2)
