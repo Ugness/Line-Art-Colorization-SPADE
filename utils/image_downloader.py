@@ -12,7 +12,7 @@ lock = threading.Semaphore(200)
 
 def download(url, file):
     tries = 0
-    while tries < 5:
+    while tries < 20:
         try:
             response = requests.get(url, stream=True, timeout=3)
             if response.status_code == 200:
@@ -22,7 +22,7 @@ def download(url, file):
             return
         except:
             tries += 1
-            if tries >= 5:
+            if tries >= 20:
                 print("Failed to Download Image {}".format(file), flush=True)
                 lock.release()
                 return
@@ -48,6 +48,8 @@ if __name__ == '__main__':
     for i in range(len(data['sample_url'])):
         pbar.update(1)
         url = 'http:' + data['sample_url'][i].lstrip('http:')
+        if not (url.endswith('png') or url.endswith('jpg')):
+            continue
         file = os.path.join(savedir, '{}.png'.format(data['id'][i]))
         thread = threading.Thread(target=download, kwargs={'url': url, 'file': file})
         threads.append(thread)
