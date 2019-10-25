@@ -12,11 +12,9 @@ mod = load_model('mod.h5')
 mod.layers.pop(0)
 weights = mod.get_weights()
 
-# mod.summary()
 new_input = Input(shape=(None, None, 1))
 new_output = mod(new_input)
 new_mod = Model(new_input, new_output)
-new_mod.summary()
 new_mod.layers[-1].set_weights(weights)
 
 def resize_image(size, img):
