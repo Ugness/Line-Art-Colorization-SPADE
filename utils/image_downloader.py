@@ -41,9 +41,9 @@ def download(url, file, size=0):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download images from given metadata.')
-    parser.add_argument('--savedir', type=str, help='directory to save images')
-    parser.add_argument('--metadata', type=str, metavar='*.csv', help='csv file which contains metadata(urls)')
-    parser.add_argument('--size', type=int, default=0, help='max length of image. if 0, original size')
+    parser.add_argument('--savedir', required=True, type=str, help='directory to save images')
+    parser.add_argument('--metadata', required=True, type=str, metavar='*.csv', help='csv file which contains metadata(urls)')
+    parser.add_argument('--size', required=True, type=int, default=0, help='max length of image. if 0, original size')
     args = parser.parse_args()
 
     print("Loading {}".format(args.metadata))

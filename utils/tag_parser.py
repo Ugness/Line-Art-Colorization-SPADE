@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Download images from given metadata.')
-    parser.add_argument('--savedir', type=str, help='directory to save parsed_metadata')
-    parser.add_argument('--metadata', type=str, metavar='*.csv', help='csv file which contains metadata(urls)')
+    parser.add_argument('--savedir', required=True, type=str, help='directory to save parsed_metadata')
+    parser.add_argument('--metadata', required=True, type=str, metavar='*.csv', help='csv file which contains metadata(urls)')
     parser.add_argument('--tag_list', nargs='+', help='Tags that you want to parse')
     parser.add_argument('--ignore', nargs='*', default=[], help='Tags that you do not want to parse')
     args = parser.parse_args()
