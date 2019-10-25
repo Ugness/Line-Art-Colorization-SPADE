@@ -61,7 +61,7 @@ if __name__ == '__main__':
         if not (url.endswith('png') or url.endswith('jpg')):
             continue
         file = os.path.join(savedir, '{}.png'.format(data['id'][i]))
-        thread = threading.Thread(target=download, kwargs={'url': url, 'file': file})
+        thread = threading.Thread(target=download, kwargs={'url': url, 'file': file, 'size': args.size})
         threads.append(thread)
         thread.start()
         lock.acquire()
