@@ -23,7 +23,7 @@ def download(url, file, size=0):
                     img = np.asarray(bytearray(response.content), dtype=np.uint8)
                     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
                     img = resize_img(img, size, 255)
-                    cv2.imwrite(file, img)
+                    cv2.imwrite(file.replace('.png', '.jpg'), img)
                 else:
                     with open(file, 'wb') as f:
                         f.write(response.content)
