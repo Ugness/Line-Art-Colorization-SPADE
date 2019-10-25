@@ -17,23 +17,16 @@ new_output = mod(new_input)
 new_mod = Model(new_input, new_output)
 new_mod.layers[-1].set_weights(weights)
 
-def resize_image(size, img):
-    pass
-
-
-def resize_line_mat(size, img):
-    pass
-
 
 def get(path):
     color_path = os.path.join(path, 'color')
+    img_list = os.listdir(color_path)
     sketch_path = dict()
     sketch_path['pured'] = os.path.join(path, 'pured')
     sketch_path['enhanced'] = os.path.join(path, 'enhanced')
     sketch_path['original'] = os.path.join(path, 'original')
     for opt in sketch_path.keys():
         os.makedirs(sketch_path[opt], exist_ok=True)
-    img_list = os.listdir(color_path)
     for img_name in tqdm(img_list):
         from_mat = cv2.imread(os.path.join(color_path, img_name))
         if from_mat is None:
@@ -68,5 +61,8 @@ def get(path):
         get_active_img_and_save_denoise(line_mat, os.path.join(sketch_path['original'], img_name.replace('png', 'jpg')))
     return
 
-
-get(os.path.join('..', '..', 'data', 'safebooru', 'upper_body'))
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Download images from given metadata.')
+    parser.add_argument('--target-dir', type=str, help='directory of target folder')
+    args = parser.parse_args()
+    get(args.target_dir)
