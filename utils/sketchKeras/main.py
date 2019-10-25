@@ -22,9 +22,9 @@ def get(path):
     color_path = os.path.join(path, 'color')
     img_list = os.listdir(color_path)
     sketch_path = dict()
-    sketch_path['pured'] = os.path.join(path, 'pured')
-    sketch_path['enhanced'] = os.path.join(path, 'enhanced')
-    sketch_path['original'] = os.path.join(path, 'original')
+    sketch_path['pured'] = os.path.join(path, 'sketch', 'pured')
+    sketch_path['enhanced'] = os.path.join(path, 'sketch', 'enhanced')
+    sketch_path['original'] = os.path.join(path, 'sketch', 'original')
     for opt in sketch_path.keys():
         os.makedirs(sketch_path[opt], exist_ok=True)
     for img_name in tqdm(img_list):
