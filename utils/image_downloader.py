@@ -4,7 +4,7 @@ import pandas as pd
 import argparse
 import requests
 from tqdm import tqdm
-from utils.util import resize_img
+from util import resize_img
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
