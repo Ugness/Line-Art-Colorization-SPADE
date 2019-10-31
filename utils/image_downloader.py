@@ -31,12 +31,13 @@ def download(url, file, size=0):
             return
         except:
             tries += 1
-            if tries >= 20:
+            if tries >= 10:
                 print("Failed to Download Image {}".format(file), flush=True)
                 lock.release()
                 return
             # print("Retry to Download Image {}".format(file), flush=True)
             continue
+    lock.release()
 
 
 if __name__ == '__main__':
