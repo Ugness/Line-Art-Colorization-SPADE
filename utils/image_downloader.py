@@ -4,18 +4,18 @@ import pandas as pd
 import argparse
 import requests
 from tqdm import tqdm
-from utils.util import resize_img
+from util import resize_img
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
 
-lock = threading.Semaphore(200)
+lock = threading.Semaphore(20)
 
 
 def download(url, file, size=0):
     tries = 0
-    while tries < 20:
+    while tries < 10:
         try:
             response = requests.get(url, stream=True, timeout=3)
             if response.status_code == 200:
