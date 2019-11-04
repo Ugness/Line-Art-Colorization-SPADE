@@ -3,6 +3,7 @@ import os.path
 import torch
 from PIL import Image
 
+import utils.normalize as normalize
 import utils.util as util
 from dataloader.base_dataset import BaseDataset, get_transform
 from dataloader.image_folder import make_dataset
@@ -56,14 +57,14 @@ class SafebooruDataset(BaseDataset):
             (color_path, line_path)
 
         # Target tensor: Lab color image
-        target_tensor = util.rgb2lab(color_img, self.opt)[0,:,:,:]
+        target_tensor = normalize.normalize(util.rgb2lab(color_img, self.opt).squeeze(0))
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
 
         # Input tensor: Line image + mask (1 channel) + hint (Lab from Lab)
         input_tensor = torch.cat((line_img,
                                   colorization_data['mask_B'],
-                                  colorization_data['hint_B']), dim=1)[0,:,:,:]
+                                  colorization_data['hint_B']), dim=1).squeeze(0)
 
         return {'input': input_tensor,
                 'target': target_tensor,
