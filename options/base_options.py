@@ -31,7 +31,7 @@ class BaseOptions():
 
         # input/output sizes
         parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
-        parser.add_argument('--preprocess_mode', type=str, default='scale_width', help='scaling and cropping of images at load time.', choices=("resize_and_crop", "crop", "scale_width", "scale_width_and_crop", "scale_shortside", "scale_shortside_and_crop", "fixed", "none"))
+        parser.add_argument('--preprocess_mode', type=str, default='scale_width_and_crop', help='scaling and cropping of images at load time.', choices=("resize_and_crop", "crop", "scale_width", "scale_width_and_crop", "scale_shortside", "scale_shortside_and_crop", "fixed", "none"))
         parser.add_argument('--loadSize', type=int, default=512, help='Scale images to this size. The final image will be cropped to --crop_size.')
         parser.add_argument('--fineSize', type=int, default=512, help='Crop to the width of crop_size (after initially scaling the images to load_size.)')
         parser.add_argument('--aspect_ratio', type=float, default=1.0, help='The ratio width/height. The final height of the load image will be crop_size/aspect_ratio')
