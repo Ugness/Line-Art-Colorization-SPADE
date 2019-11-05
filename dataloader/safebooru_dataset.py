@@ -12,6 +12,9 @@ from dataloader.image_folder import make_dataset
 class SafebooruDataset(BaseDataset):
     @staticmethod
     def modify_commandline_options(parser, is_train):
+        parser.set_defaults(findSize=512)
+        parser.set_defaults(loadSize=512)
+        parser.set_defaults(preprocess_mode='scale_width')
         return parser
 
     def initialize(self, opt):

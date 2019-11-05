@@ -9,7 +9,7 @@ import os
 from util import util
 import torch
 import models
-import data
+import dataloader
 import pickle
 
 
@@ -86,7 +86,7 @@ class BaseOptions():
 
         # modify dataset-related parser options
         dataset_mode = opt.dataset_mode
-        dataset_option_setter = data.get_option_setter(dataset_mode)
+        dataset_option_setter = dataloader.get_option_setter(dataset_mode)
         parser = dataset_option_setter(parser, self.isTrain)
 
         opt, unknown = parser.parse_known_args()
