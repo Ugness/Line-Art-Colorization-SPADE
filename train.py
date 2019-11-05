@@ -6,7 +6,6 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 import sys
 from collections import OrderedDict
 from options.train_options import TrainOptions
-import data
 import dataloader
 from util.iter_counter import IterationCounter
 from util.visualizer import Visualizer
@@ -19,7 +18,7 @@ opt = TrainOptions().parse()
 print(' '.join(sys.argv))
 
 # load the dataset
-dataloader = dataloader.SafebooruDataLoader(opt)#data.create_dataloader(opt)
+dataloader = dataloader.create_dataset(opt)
 
 
 # create trainer for our model
