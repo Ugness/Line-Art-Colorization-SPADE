@@ -7,6 +7,7 @@ import sys
 from collections import OrderedDict
 from options.train_options import TrainOptions
 import data
+import dataloader
 from util.iter_counter import IterationCounter
 from util.visualizer import Visualizer
 from trainers.pix2pix_trainer import Pix2PixTrainer
@@ -18,7 +19,8 @@ opt = TrainOptions().parse()
 print(' '.join(sys.argv))
 
 # load the dataset
-dataloader = data.create_dataloader(opt)
+dataloader = dataloader.SafebooruDataLoader(opt)#data.create_dataloader(opt)
+
 
 # create trainer for our model
 trainer = Pix2PixTrainer(opt)
