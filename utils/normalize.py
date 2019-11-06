@@ -91,6 +91,6 @@ if __name__ == '__main__':
     opt.mask_cent = 0.
     opt.batch_size = 1
     opt.serial_batches = True
-    opt.num_threads = 0
+    opt.nThreads = 0
     opt.max_dataset_size = 1
     print(get_normalize_value(opt))
