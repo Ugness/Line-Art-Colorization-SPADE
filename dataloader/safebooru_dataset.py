@@ -20,7 +20,7 @@ class SafebooruDataset(BaseDataset):
         parser.add_argument('--l_norm', type=float, default=100.)
         parser.add_argument('--l_cent', type=float, default=50.)
         parser.add_argument('--ab_norm', type=float, default=110.)
-        parser.add_argument('--sample_Ps', type=list, default=1, 2, 3, 4, 5, 6, 7, 8, 9, ])
+        parser.add_argument('--sample_Ps', type=list, default=[1, 2, 3, 4, 5, 6, 7, 8, 9, ])
         parser.add_argument('--mask_cent', type=float, default=0.)
 
         return parser
