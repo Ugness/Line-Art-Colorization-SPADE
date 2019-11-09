@@ -64,7 +64,7 @@ class SafebooruDatasetDataLoader(BaseDataLoader):
 
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
-            batch_size=opt.batch_size,
+            batch_size=opt.batchSize,
             shuffle=not opt.serial_batches,
             num_workers=int(opt.nThreads))
 
@@ -76,6 +76,6 @@ class SafebooruDatasetDataLoader(BaseDataLoader):
 
     def __iter__(self):
         for i, data in enumerate(self.dataloader):
-            if i * self.opt.batch_size >= self.opt.max_dataset_size:
+            if i * self.opt.batchSize >= self.opt.max_dataset_size:
                 break
             yield data

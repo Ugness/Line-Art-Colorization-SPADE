@@ -115,7 +115,6 @@ class Pix2PixModel(torch.nn.Module):
 
         # create one-hot label map
         label_map = data['label']
-        print(label_map.size())
         bs, _, h, w = label_map.size()
         nc = self.opt.label_nc + 1 if self.opt.contain_dontcare_label \
             else self.opt.label_nc

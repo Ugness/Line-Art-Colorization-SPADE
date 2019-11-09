@@ -89,7 +89,7 @@ if __name__ == '__main__':
     opt.ab_norm = 110.
     opt.sample_Ps = [1, 2, 3, 4, 5, 6, 7, 8, 9, ]
     opt.mask_cent = 0.
-    opt.batch_size = 1
+    opt.batchSize = 1
     opt.serial_batches = True
     opt.nThreads = 0
     opt.max_dataset_size = 1
