@@ -18,7 +18,8 @@ opt = TrainOptions().parse()
 print(' '.join(sys.argv))
 
 # load the dataset
-dataloader = dataloader.create_dataset(opt)
+#dataloader = dataloader.create_dataset(opt)
+dataloader = dataloader.SafebooruDataLoader(opt)
 
 
 # create trainer for our model
