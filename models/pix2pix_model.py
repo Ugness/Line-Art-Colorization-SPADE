@@ -123,7 +123,7 @@ class Pix2PixModel(torch.nn.Module):
 
         # concatenate instance map if it exists
         if not self.opt.no_instance:
-            inst_map = data['instance'].byte()
+            inst_map = data['instance']
             instance_edge_map = self.get_edges(inst_map)
             input_semantics = torch.cat((input_semantics, instance_edge_map), dim=1)
 
@@ -235,6 +235,7 @@ class Pix2PixModel(torch.nn.Module):
         return fake, real
 
     def get_edges(self, t):
+        print(t.size())
         edge = self.ByteTensor(t.size()).zero_()
         edge[:, :, :, 1:] = edge[:, :, :, 1:] | (t[:, :, :, 1:] != t[:, :, :, :-1])
         edge[:, :, :, :-1] = edge[:, :, :, :-1] | (t[:, :, :, 1:] != t[:, :, :, :-1])

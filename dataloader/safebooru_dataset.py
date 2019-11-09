@@ -79,8 +79,6 @@ class SafebooruDataset(BaseDataset):
 
         # Fit to SPADE
         label_tensor = target_tensor
-        print(colorization_data['mask_B'])
-        print(colorization_data['hint_B'])
         instance_tensor = torch.cat((colorization_data['mask_B'],
                                      colorization_data['hint_B']), dim=1).squeeze(0)
         image_tensor = line_img
