@@ -84,7 +84,7 @@ class SafebooruDataset(BaseDataset):
         image_tensor = line_img
         image_path = line_path
 
-        return {'label': target_tensor,
+        return {'label': label_tensor,
                 'instance': instance_tensor,
                 'image': image_tensor,
                 'path': image_path,
