@@ -69,7 +69,6 @@ class SafebooruDataset(BaseDataset):
 
         # Target tensor: Lab color image
         target_tensor = normalize.normalize(util.rgb2lab(color_img, self.opt).squeeze(0))
-        print(line_img.size())
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
 
@@ -82,7 +81,7 @@ class SafebooruDataset(BaseDataset):
         label_tensor = target_tensor
         instance_tensor = torch.cat((colorization_data['mask_B'],
                                      colorization_data['hint_B']), dim=1).squeeze(0)
-        image_tensor = line_img
+        image_tensor = line_img.squeeze(0)
         image_path = line_path
 
         return {'label': label_tensor,
