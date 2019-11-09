@@ -77,10 +77,17 @@ class SafebooruDataset(BaseDataset):
                                   colorization_data['mask_B'],
                                   colorization_data['hint_B']), dim=1).squeeze(0)
 
-        return {'input': input_tensor,
-                'target': target_tensor,
-                'color_path': color_path,
-                'line_path': line_path,
+        # Fit to SPADE
+        label_tensor = target_tensor
+        instance_tensor = torch.cat((colorization_data['mask_B'],
+                                     colorization_data['hint_B']), dim=1).squeeze(0)
+        image_tensor = line_img
+        image_path = line_path
+
+        return {'label': target_tensor,
+                'instance': instance_tensor,
+                'image': image_tensor,
+                'path': image_path,
                 }
 
     def __len__(self):
