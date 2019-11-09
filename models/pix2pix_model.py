@@ -236,7 +236,6 @@ class Pix2PixModel(torch.nn.Module):
         return fake, real
 
     def get_edges(self, t):
-        print(t.size())
         edge = self.ByteTensor(t.size()).zero_()
         edge[:, :, :, 1:] = edge[:, :, :, 1:] | (t[:, :, :, 1:] != t[:, :, :, :-1]).byte()
         edge[:, :, :, :-1] = edge[:, :, :, :-1] | (t[:, :, :, 1:] != t[:, :, :, :-1]).byte()

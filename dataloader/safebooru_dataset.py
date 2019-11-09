@@ -69,6 +69,7 @@ class SafebooruDataset(BaseDataset):
 
         # Target tensor: Lab color image
         target_tensor = normalize.normalize(util.rgb2lab(color_img, self.opt).squeeze(0))
+        print(target_tensor.size())
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
 
