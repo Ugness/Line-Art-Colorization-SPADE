@@ -1,8 +1,9 @@
 import os.path
-import numpy as np
 
+import numpy as np
 import torch
 from PIL import Image
+from torchvision.transforms import transforms
 
 import utils.normalize as normalize
 import utils.util as util
@@ -56,23 +57,44 @@ class SafebooruDataset(BaseDataset):
         filename2_without_ext = self.image_name(path2)
         return filename1_without_ext == filename2_without_ext
 
+    def sync_transform(self, color_img, line_img):
+        color_w, color_h = color_img.size
+        line_w, line_h = line_img.size
+
+        n = min(color_w, color_h, line_w, line_h)
+        pre_transform = transforms.Resize(n, Image.BICUBIC) # Fit all image to same size n*n
+
+        color_img = pre_transform(color_img) # Size of N*N*3
+        line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2) # Size of n*n*1
+
+        transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
+
+        color_img = transformed_img[0:3, :, :].unsqueeze(0) # Size of 1*3*m*m
+        line_img = transformed_img[[3,], :, :].unsqueeze(0) # Size of 1*1*m*m
+
+        return color_img, line_img
+
+
     def __getitem__(self, index):
         color_path = self.color_paths[index]
         color_img = Image.open(color_path).convert('RGB')
-        color_img = self.transform(color_img).unsqueeze(0)
 
         line_path = self.line_paths[index]
         line_img = Image.open(line_path).convert('L')
-        line_img = self.transform(np.concatenate([color_img, line_img], axis=1)).unsqueeze(0)
 
         assert self.paths_match(color_path, line_path), \
             "The label_path %s and image_path %s don't match." % \
             (color_path, line_path)
 
-        # Target tensor: Lab color image
-        target_tensor = normalize.normalize(util.rgb2lab(color_img, self.opt).squeeze(0))
+        color_img, line_img = self.sync_transform(color_img, line_img)
 
-        colorization_data = util.get_colorization_data(target_tensor.unsqueeze(0), self.opt)
+        color_img = util.rgb2lab(color_img, self.opt)
+
+        # Target tensor: normalized Lab color image
+        target_tensor = normalize.normalize(color_img, batch=True).squeeze(0)
+
+        colorization_data = util.get_colorization_data(color_img, self.opt)
+        colorization_data['hint_B'] = normalize.normalize(colorization_data['hint_B'], batch=True)
 
         # Input tensor: Line image + mask (1 channel) + hint (Lab from Lab)
         input_tensor = torch.cat((line_img,
