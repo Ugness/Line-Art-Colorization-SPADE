@@ -29,15 +29,15 @@ class SafebooruDataset(BaseDataset):
         self.opt = opt
         self.root = opt.dataroot
 
-        self.color_dir = os.path.join(opt.dataroot, 'color/')
+        self.color_dir = os.path.join(opt.dataroot, 'color')
         self.color_paths = make_dataset(self.color_dir)
         self.color_paths = sorted(self.color_paths)
 
-        folder = ['line/', 'sketch/']
-        category = ['enhanced/', 'original/', 'pured/']
+        folder = ['line', 'sketch']
+        category = ['enhanced', 'original', 'pured']
         idx1 = (torch.randint(0, 2, (1, ))).item()
         idx2 = (torch.randint(0, 3, (1, ))).item()
-        dir = folder[idx1] + category[idx2]
+        dir = os.path.join(folder[idx1], category[idx2])
 
         self.line_dir = os.path.join(opt.dataroot, dir)
         self.line_paths = make_dataset(self.line_dir)
