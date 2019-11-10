@@ -130,7 +130,7 @@ class Pix2PixModel(torch.nn.Module):
         #     instance_edge_map = self.get_edges(inst_map)
         #     input_semantics = torch.cat((input_semantics, instance_edge_map), dim=1)
 
-        return input_semantics, data['image']
+        return input_semantics, data['label']
 
     def compute_generator_loss(self, input_semantics, real_image):
         G_losses = {}
