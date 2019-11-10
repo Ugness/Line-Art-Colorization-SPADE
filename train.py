@@ -51,9 +51,12 @@ for epoch in iter_counter.training_epochs():
                                             losses, iter_counter.time_per_iter)
             visualizer.plot_current_errors(losses, iter_counter.total_steps_so_far)
 
+        from utils import util
+        from utils.normalize import denormalize
         if iter_counter.needs_displaying():
-            visuals = OrderedDict([('input_label', data_i['label']),
-                                   ('synthesized_image', trainer.get_latest_generated()),
+        # if True:
+            visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
+                                   ('synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
                                    ('real_image', data_i['image'])])
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
