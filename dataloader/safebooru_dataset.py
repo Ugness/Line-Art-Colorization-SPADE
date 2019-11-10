@@ -1,4 +1,5 @@
 import os.path
+import numpy as np
 
 import torch
 from PIL import Image
@@ -62,7 +63,7 @@ class SafebooruDataset(BaseDataset):
 
         line_path = self.line_paths[index]
         line_img = Image.open(line_path).convert('L')
-        line_img = self.transform(line_img).unsqueeze(0)
+        line_img = self.transform(np.concatenate([color_img, line_img], axis=1)).unsqueeze(0)
 
         assert self.paths_match(color_path, line_path), \
             "The label_path %s and image_path %s don't match." % \
@@ -71,7 +72,7 @@ class SafebooruDataset(BaseDataset):
         # Target tensor: Lab color image
         target_tensor = normalize.normalize(util.rgb2lab(color_img, self.opt).squeeze(0))
 
-        colorization_data = util.get_colorization_data(color_img, self.opt)
+        colorization_data = util.get_colorization_data(target_tensor.unsqueeze(0), self.opt)
 
         # Input tensor: Line image + mask (1 channel) + hint (Lab from Lab)
         input_tensor = torch.cat((line_img,

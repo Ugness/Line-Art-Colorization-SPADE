@@ -46,8 +46,6 @@ def get_transform(opt):
         transform_list.append(transforms.RandomHorizontalFlip())
 
     transform_list += [transforms.ToTensor()]
-                       #transforms.Normalize((0.5, 0.5, 0.5),
-                       #                     (0.5, 0.5, 0.5))]
     return transforms.Compose(transform_list)
 
 # just modify the width and height to be multiple of 4

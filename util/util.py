@@ -130,6 +130,8 @@ def save_image(image_numpy, image_path, create_dir=False):
         os.makedirs(os.path.dirname(image_path), exist_ok=True)
     if len(image_numpy.shape) == 2:
         image_numpy = np.expand_dims(image_numpy, axis=2)
+    if image_numpy.shape[0] == 1:
+        image_numpy = image_numpy.transpose([1, 2, 0])
     if image_numpy.shape[2] == 1:
         image_numpy = np.repeat(image_numpy, 3, 2)
     image_pil = Image.fromarray(image_numpy)
