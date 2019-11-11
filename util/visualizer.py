@@ -3,12 +3,15 @@ Copyright (C) 2019 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 
-import os
 import ntpath
+import os
 import time
-from . import util
-from . import html
+
 import scipy.misc
+
+from . import html
+from . import util
+
 try:
     from StringIO import StringIO  # Python 2.7
 except ImportError:
@@ -128,10 +131,10 @@ class Visualizer():
     def convert_visuals_to_numpy(self, visuals):
         for key, t in visuals.items():
             tile = self.opt.batchSize > 8
-            if 'input_label' == key:
-                t = util.tensor2label(t, self.opt.label_nc + 2, tile=tile)
-            else:
-                t = util.tensor2im(t, tile=tile)
+            #if 'input_label' == key:
+                #t = util.tensor2label(t, self.opt.label_nc + 2, tile=tile)
+            #else:
+            t = util.tensor2im(t, tile=tile)
             visuals[key] = t
         return visuals
 
