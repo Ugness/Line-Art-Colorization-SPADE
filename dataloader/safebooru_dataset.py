@@ -64,7 +64,7 @@ class SafebooruDataset(BaseDataset):
         n = min(color_w, color_h, line_w, line_h)
         pre_transform = transforms.Resize(n, Image.BICUBIC) # Fit all image to same size n*n
 
-        color_img = pre_transform(color_img) # Size of N*N*3
+        color_img = pre_transform(color_img) # Size of n*n*3
         line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2) # Size of n*n*1
 
         transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
@@ -95,11 +95,6 @@ class SafebooruDataset(BaseDataset):
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
         colorization_data['hint_B'] = normalize.normalize(colorization_data['hint_B'], batch=True)
-
-        # Input tensor: Line image + mask (1 channel) + hint (Lab from Lab)
-        input_tensor = torch.cat((line_img,
-                                  colorization_data['mask_B'],
-                                  colorization_data['hint_B']), dim=1).squeeze(0)
 
         # Fit to SPADE
         label_tensor = target_tensor
