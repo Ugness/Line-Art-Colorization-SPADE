@@ -53,11 +53,12 @@ for epoch in iter_counter.training_epochs():
 
         from utils import util
         from utils.normalize import denormalize
+        import numpy as np
         if iter_counter.needs_displaying():
         # if True:
             visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
                                    ('synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
-                                   ('real_image', data_i['image'])])
+                                   ('real_image', np.expand_dims(data_i['image'],axis=-1))])
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
         if iter_counter.needs_saving():
