@@ -59,7 +59,7 @@ for epoch in iter_counter.training_epochs():
         # if True:
             visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
                                    ('synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
-                                   ('real_image', data_i['image'])])
+                                   ('real_image', np.repeat(data_i['image'],3,1))])
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
         if iter_counter.needs_saving():
