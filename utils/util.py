@@ -159,10 +159,11 @@ def get_colorization_data(data_lab, opt, ab_thresh=5., p=.125, num_points=None):
         mask = torch.sum(torch.abs(
             torch.max(torch.max(data['B'], dim=3)[0], dim=2)[0] - torch.min(torch.min(data['B'], dim=3)[0], dim=2)[0]),
                          dim=1) >= thresh
-        data['A'] = data['A'][mask, :, :, :]
-        data['B'] = data['B'][mask, :, :, :]
-        # print('Removed %i grayscale images'%torch.sum(mask==0).numpy())
-        if (torch.sum(mask) == 0):
+        if not (torch.sum(mask) == 0):
+            data['A'] = data['A'][mask, :, :, :]
+            data['B'] = data['B'][mask, :, :, :]
+            # print('Removed %i grayscale images'%torch.sum(mask==0).numpy())
+        else:
             print("Shit")
             data['A'] = torch.zeros_like(data['A']).to(data['A'].device)
             data['B'] = torch.zeros_like(data['B']).to(data['B'].device)
