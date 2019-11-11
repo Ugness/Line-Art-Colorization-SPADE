@@ -57,9 +57,15 @@ for epoch in iter_counter.training_epochs():
         import torch
         if iter_counter.needs_displaying():
         # if True:
+            # hint visualization
+            mask_B = np.repeat(data_i['instance'][:,0,:,:],3,1)
+            hint_B = data_i['instance'][:,1:,:,:]
+            hint_vis = np.multiply(mask_B, hint_B)
+
             visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
                                    ('synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
-                                   ('real_image', np.repeat(data_i['image'],3,1))])
+                                   ('real_image', np.repeat(data_i['image'],3,1)),
+                                   ('hint_image', util.lab2rgb(denormalize(hint_vis), opt))])
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
         if iter_counter.needs_saving():
