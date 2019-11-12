@@ -58,13 +58,14 @@ for epoch in iter_counter.training_epochs():
             # hint visualization
             mask_B = np.repeat(data_i['instance'][:, :1, :, :], 3, 1)
             hint_B = data_i['instance'][:, 1:, :, :]
-            hint_vis = np.multiply(data_i['label'], 1 - mask_B) + np.multiply(mask_B, hint_B)
+            hint_vis = np.multiply(mask_B, hint_B) + data_i['label'] * 0.3 * (1 - mask_B)
 
-            visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
-                                   (
-                                   'synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
+            visuals = OrderedDict([('input_label', data_i['label']),
+                                   ('synthesized_image', trainer.get_latest_generated()),
                                    ('real_image', np.repeat(data_i['image'], 3, 1)),
-                                   ('hint_image', util.lab2rgb(denormalize(hint_vis), opt))])
+                                   ('hint_image', hint_vis)])
+            for key, item in visuals.items():
+                visuals[key] = item * 0.5 + 0.5
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
         if iter_counter.needs_saving():

@@ -29,7 +29,7 @@ def get_normalize_value(opt):
     for path in tqdm(color_paths):
         color_img = Image.open(path).convert('RGB')
         color_img = transform(color_img).unsqueeze(0)
-        numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
+        numpy_img = color_img[0, :, :, :].numpy()
 
         img_mean = np.mean(numpy_img, axis=(1, 2))
         img_min = np.min(numpy_img, axis=(1, 2))
@@ -44,12 +44,13 @@ def get_normalize_value(opt):
     max_ = np.array(max_).max(axis=0)
 
     var_ = []
+    mean4var = np.reshape(mean_, (3, 1, 1))
     for path in tqdm(color_paths):
         color_img = Image.open(path).convert('RGB')
         color_img = transform(color_img).unsqueeze(0)
         numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
         # Should divide by N-1 for sample var, but just use N. N is large enough.
-        img_var = np.mean(numpy_img-mean_, axis=(1, 2))
+        img_var = np.mean((numpy_img-mean4var)**2, axis=(1, 2))
         var_.append(img_var)
 
     std_ = np.sqrt(np.array(var_).mean(axis=0))
@@ -57,39 +58,39 @@ def get_normalize_value(opt):
     return mean_, std_, min_, max_
 
 
-mean = torch.tensor([0.32856414, 0.0368233, 0.02034278])
-std = torch.tensor([0.23836923, 0.08061118, 0.08756524])
-
-
-def normalize(image, batch=False):
-    """
-    Normalize the image in Lab space.
-    :param batch:
-    :param image:
-    :return normalized image:
-    """
-    transform = transforms.Normalize(mean, std)
-    if batch:
-        for nn in range(image.shape[0]):
-            image[nn, :, :, :] = transform(image[nn, :, :, :])
-    else:
-        image = transform(image)
-    return image
-
-
-def denormalize(image, CHW=True):
-    """
-    :param image: {N, H, W, C} {N, C, H, W}
-    :param CHW: or HWC?
-    :return: denormalized image
-    """
-    if CHW:
-        _std = std.view(3, 1, 1).to(image.device)
-        _mean = mean.view(3, 1, 1).to(image.device)
-    else:
-        _std = std.view(1, 1, 3).to(image.device)
-        _mean = mean.view(1, 1, 3).to(image.device)
-    return (image * _std) + _mean
+# mean = torch.tensor([0.32856414, 0.0368233, 0.02034278])
+# std = torch.tensor([0.23836923, 0.08061118, 0.08756524])
+#
+#
+# def normalize(image, batch=False):
+#     """
+#     Normalize the image in Lab space.
+#     :param batch:
+#     :param image:
+#     :return normalized image:
+#     """
+#     transform = transforms.Normalize(mean, std)
+#     if batch:
+#         for nn in range(image.shape[0]):
+#             image[nn, :, :, :] = transform(image[nn, :, :, :])
+#     else:
+#         image = transform(image)
+#     return image
+#
+#
+# def denormalize(image, CHW=True):
+#     """
+#     :param image: {N, H, W, C} {N, C, H, W}
+#     :param CHW: or HWC?
+#     :return: denormalized image
+#     """
+#     if CHW:
+#         _std = std.view(3, 1, 1).to(image.device)
+#         _mean = mean.view(3, 1, 1).to(image.device)
+#     else:
+#         _std = std.view(1, 1, 3).to(image.device)
+#         _mean = mean.view(1, 1, 3).to(image.device)
+#     return (image * _std) + _mean
 
 
 if __name__ == '__main__':
