@@ -25,7 +25,7 @@ def get_transform(opt):
     transform_list = []
     if opt.preprocess_mode == 'resize_and_crop':
         osize = [opt.loadSize, opt.loadSize]
-        transform_list.append(transforms.Resize(osize, Image.BICUBIC))
+        transform_list.append(transforms.Resize(osize, Image.NEAREST))
         transform_list.append(transforms.RandomCrop(opt.fineSize))
     elif opt.preprocess_mode == 'crop':
         transform_list.append(transforms.RandomCrop(opt.fineSize))
@@ -68,7 +68,7 @@ def __adjust(img):
     if ow != w or oh != h:
         __print_size_warning(ow, oh, w, h)
 
-    return img.resize((w, h), Image.BICUBIC)
+    return img.resize((w, h), Image.NEAREST)
 
 
 def __scale_width(img, target_width):
@@ -89,7 +89,7 @@ def __scale_width(img, target_width):
     if target_height != h:
         __print_size_warning(target_width, target_height, w, h)
 
-    return img.resize((w, h), Image.BICUBIC)
+    return img.resize((w, h), Image.NEAREST)
 
 
 def __print_size_warning(ow, oh, w, h):
