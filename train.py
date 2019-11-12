@@ -11,7 +11,6 @@ from util.iter_counter import IterationCounter
 from util.visualizer import Visualizer
 from trainers.pix2pix_trainer import Pix2PixTrainer
 from utils import util
-from utils.normalize import denormalize
 import numpy as np
 
 # parse options
@@ -46,12 +45,14 @@ for epoch in iter_counter.training_epochs():
         # train discriminator
         trainer.run_discriminator_one_step(data_i)
 
+        if opt.tf_log:
+            losses = trainer.get_latest_losses()
+            visualizer.plot_current_errors(losses, iter_counter.total_steps_so_far)
         # Visualizations
         if iter_counter.needs_printing():
             losses = trainer.get_latest_losses()
             visualizer.print_current_errors(epoch, iter_counter.epoch_iter,
                                             losses, iter_counter.time_per_iter)
-            visualizer.plot_current_errors(losses, iter_counter.total_steps_so_far)
 
         if iter_counter.needs_displaying():
             # if True:

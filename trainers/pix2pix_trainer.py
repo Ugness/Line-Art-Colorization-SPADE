@@ -37,6 +37,7 @@ class Pix2PixTrainer():
         g_loss.backward()
         self.optimizer_G.step()
         self.g_losses = g_losses
+        self.g_losses['G_Loss'] = g_loss
         self.generated = generated
 
     def run_discriminator_one_step(self, data):
@@ -46,6 +47,8 @@ class Pix2PixTrainer():
         d_loss.backward()
         self.optimizer_D.step()
         self.d_losses = d_losses
+        self.d_losses['D_Loss'] = d_loss
+
 
     def get_latest_losses(self):
         return {**self.g_losses, **self.d_losses}
