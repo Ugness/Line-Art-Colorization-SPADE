@@ -1,7 +1,9 @@
 import os.path
 
+import numpy as np
 import torch
 from PIL import Image
+from torchvision.transforms import transforms
 
 import utils.normalize as normalize
 import utils.util as util
@@ -12,21 +14,33 @@ from dataloader.image_folder import make_dataset
 class SafebooruDataset(BaseDataset):
     @staticmethod
     def modify_commandline_options(parser, is_train):
+        parser.set_defaults(findSize=512)
+        parser.set_defaults(loadSize=512)
+        parser.set_defaults(crop_size=512)
+        parser.set_defaults(preprocess_mode='scale_width')
+        parser.set_defaults(label_nc=5)
+
+        parser.add_argument('--l_norm', type=float, default=100.)
+        parser.add_argument('--l_cent', type=float, default=50.)
+        parser.add_argument('--ab_norm', type=float, default=110.)
+        parser.add_argument('--sample_Ps', type=list, default=[1, 2, 3, 4, 5, 6, 7, 8, 9, ])
+        parser.add_argument('--mask_cent', type=float, default=0.)
+
         return parser
 
     def initialize(self, opt):
         self.opt = opt
         self.root = opt.dataroot
 
-        self.color_dir = os.path.join(opt.dataroot, 'color/')
+        self.color_dir = os.path.join(opt.dataroot, 'color')
         self.color_paths = make_dataset(self.color_dir)
         self.color_paths = sorted(self.color_paths)
 
-        folder = ['line/', 'sketch/']
-        category = ['enhanced/', 'original/', 'pured/']
+        folder = ['line', 'sketch']
+        category = ['enhanced', 'original', 'pured']
         idx1 = (torch.randint(0, 2, (1, ))).item()
         idx2 = (torch.randint(0, 3, (1, ))).item()
-        dir = folder[idx1] + category[idx2]
+        dir = os.path.join(folder[idx1], category[idx2])
 
         self.line_dir = os.path.join(opt.dataroot, dir)
         self.line_paths = make_dataset(self.line_dir)
@@ -43,33 +57,56 @@ class SafebooruDataset(BaseDataset):
         filename2_without_ext = self.image_name(path2)
         return filename1_without_ext == filename2_without_ext
 
+    def sync_transform(self, color_img, line_img):
+        color_w, color_h = color_img.size
+        line_w, line_h = line_img.size
+
+        n = min(color_w, color_h, line_w, line_h)
+        pre_transform = transforms.Resize(n, Image.BICUBIC) # Fit all image to same size n*n
+
+        color_img = pre_transform(color_img) # Size of n*n*3
+        line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2) # Size of n*n*1
+
+        transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
+
+        color_img = transformed_img[0:3, :, :].unsqueeze(0) # Size of 1*3*m*m
+        line_img = transformed_img[[3,], :, :].unsqueeze(0) # Size of 1*1*m*m
+
+        return color_img, line_img
+
+
     def __getitem__(self, index):
         color_path = self.color_paths[index]
         color_img = Image.open(color_path).convert('RGB')
-        color_img = self.transform(color_img).unsqueeze(0)
 
         line_path = self.line_paths[index]
         line_img = Image.open(line_path).convert('L')
-        line_img = self.transform(line_img).unsqueeze(0)
 
         assert self.paths_match(color_path, line_path), \
             "The label_path %s and image_path %s don't match." % \
             (color_path, line_path)
 
-        # Target tensor: Lab color image
-        target_tensor = normalize.normalize(util.rgb2lab(color_img, self.opt).squeeze(0))
+        color_img, line_img = self.sync_transform(color_img, line_img)
+
+        color_img = util.rgb2lab(color_img, self.opt)
+
+        # Target tensor: normalized Lab color image
+        target_tensor = normalize.normalize(color_img, batch=True).squeeze(0)
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
+        colorization_data['hint_B'] = normalize.normalize(colorization_data['hint_B'], batch=True)
 
-        # Input tensor: Line image + mask (1 channel) + hint (Lab from Lab)
-        input_tensor = torch.cat((line_img,
-                                  colorization_data['mask_B'],
-                                  colorization_data['hint_B']), dim=1).squeeze(0)
+        # Fit to SPADE
+        label_tensor = target_tensor
+        instance_tensor = torch.cat((colorization_data['mask_B'],
+                                     colorization_data['hint_B']), dim=1).squeeze(0)
+        image_tensor = line_img.squeeze(0)
+        image_path = line_path
 
-        return {'input': input_tensor,
-                'target': target_tensor,
-                'color_path': color_path,
-                'line_path': line_path,
+        return {'label': label_tensor,
+                'instance': instance_tensor,
+                'image': image_tensor,
+                'path': image_path,
                 }
 
     def __len__(self):

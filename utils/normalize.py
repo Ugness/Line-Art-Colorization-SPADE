@@ -27,10 +27,10 @@ def get_normalize_value(opt):
     for path in color_paths:
         color_img = Image.open(path).convert('RGB')
         color_img = transform(color_img).unsqueeze(0)
-        numpy_img = util.rgb2lab(color_img, opt)[0,:,:,:].numpy()
+        numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
 
         img_mean = np.mean(numpy_img, axis=(1, 2))
-        img_std = np.std(numpy_img, axis=(1, 2), ddof=1) # ddof=1 => stdev = L2/(N-1)
+        img_std = np.std(numpy_img, axis=(1, 2), ddof=1)  # ddof=1 => stdev = L2/(N-1)
 
         mean_.append(img_mean)
         std_.append(img_std)
@@ -40,8 +40,10 @@ def get_normalize_value(opt):
 
     return mean_, std_
 
-mean = torch.tensor([0.32856414, 0.0368233 , 0.02034278])
+
+mean = torch.tensor([0.32856414, 0.0368233, 0.02034278])
 std = torch.tensor([0.23836923, 0.08061118, 0.08756524])
+
 
 def normalize(image, batch=False):
     """
@@ -53,29 +55,26 @@ def normalize(image, batch=False):
     transform = transforms.Normalize(mean, std)
     if batch:
         for nn in range(image.shape[0]):
-            image[nn,:,:,:] = transform(image[nn,:,:,:])
+            image[nn, :, :, :] = transform(image[nn, :, :, :])
     else:
         image = transform(image)
     return image
 
-def denormalize(image, batch=True):
-    """
-    Denormalize the image in Lab space.
-    :param batch:
-    :param image:
-    :return denormalized image:
-    """
 
-    zeros = [0., 0., 0.]
-    ones = [1., 1., 1.]
-    transform = transforms.Compose([transforms.Normalize(zeros, std.pow_(-1)),
-                                    transforms.Normalize(-mean, ones)])
-    if batch:
-        for nn in range(image.shape[0]):
-            image[nn,:,:,:] = transform(image[nn,:,:,:])
+def denormalize(image, CHW=True):
+    """
+    :param image: {N, H, W, C} {N, C, H, W}
+    :param CHW: or HWC?
+    :return: denormalized image
+    """
+    if CHW:
+        _std = std.view(3, 1, 1).to(image.device)
+        _mean = mean.view(3, 1, 1).to(image.device)
     else:
-        image = transform(image)
-    return image
+        _std = std.view(1, 1, 3).to(image.device)
+        _mean = mean.view(1, 1, 3).to(image.device)
+    return (image * _std) + _mean
+
 
 if __name__ == '__main__':
     opt = ArgumentParser().parse_args()
@@ -89,8 +88,8 @@ if __name__ == '__main__':
     opt.ab_norm = 110.
     opt.sample_Ps = [1, 2, 3, 4, 5, 6, 7, 8, 9, ]
     opt.mask_cent = 0.
-    opt.batch_size = 1
+    opt.batchSize = 1
     opt.serial_batches = True
-    opt.num_threads = 0
+    opt.nThreads = 0
     opt.max_dataset_size = 1
     print(get_normalize_value(opt))
