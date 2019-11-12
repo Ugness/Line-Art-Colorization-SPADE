@@ -52,6 +52,7 @@ class Visualizer():
         if self.tf_log: # show images in tensorboard output
             for label, image_numpy in visuals_tensor.items():
                 self.writer.add_images(label, image_numpy, step)
+            self.writer.flush()
 
         if self.use_html: # save images to a html file
             for label, image_numpy in visuals.items():
