@@ -36,7 +36,7 @@ class SafebooruDataset(BaseDataset):
         self.color_paths = make_dataset(self.color_dir)
         self.color_paths = sorted(self.color_paths)
 
-        folder = ['line', 'sketch']
+        folder = ['line']
         category = ['enhanced', 'original', 'pured']
         idx1 = (torch.randint(0, 2, (1,))).item()
         idx2 = (torch.randint(0, 3, (1,))).item()
@@ -68,6 +68,7 @@ class SafebooruDataset(BaseDataset):
         line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2)  # Size of n*n*1
 
         transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
+        transformed_img = (transformed_img - 0.5) / 0.5     # Normalize image to make problem easier with tanh
 
         color_img = transformed_img[0:3, :, :].unsqueeze(0)  # Size of 1*3*m*m
         line_img = transformed_img[[3, ], :, :].unsqueeze(0)  # Size of 1*1*m*m
@@ -87,24 +88,22 @@ class SafebooruDataset(BaseDataset):
 
         color_img, line_img = self.sync_transform(color_img, line_img)
 
-        color_img = util.rgb2lab(color_img, self.opt)
-
         # Target tensor: normalized Lab color image
-        target_tensor = normalize.normalize(color_img, batch=True).squeeze(0)
+        target_tensor = color_img.squeeze(0)
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
-        colorization_data['hint_B'] = normalize.normalize(colorization_data['hint_B'], batch=True)
+        colorization_data['hint_B'] = colorization_data['hint_B']
 
         # Fit to SPADE
-        label_tensor = target_tensor
-        instance_tensor = torch.cat((colorization_data['mask_B'],
+        real_image = target_tensor
+        hint_tensor = torch.cat((colorization_data['mask_B'],
                                      colorization_data['hint_B']), dim=1).squeeze(0)
-        image_tensor = line_img.squeeze(0)
+        sketch_tensor = line_img.squeeze(0)
         image_path = line_path
 
-        return {'label': label_tensor,
-                'instance': instance_tensor,
-                'image': image_tensor,
+        return {'label': real_image,
+                'instance': hint_tensor,
+                'image': sketch_tensor,
                 'path': image_path,
                 }
 
