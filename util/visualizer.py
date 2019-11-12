@@ -25,10 +25,9 @@ class Visualizer():
         self.win_size = opt.display_winsize
         self.name = opt.name
         if self.tf_log:
-            import tensorflow as tf
-            self.tf = tf
+            from torch.utils.tensorboard import SummaryWriter
             self.log_dir = os.path.join(opt.checkpoints_dir, opt.name, 'logs')
-            self.writer = tf.summary.FileWriter(self.log_dir)
+            self.writer = SummaryWriter(self.log_dir)
 
         if self.use_html:
             self.web_dir = os.path.join(opt.checkpoints_dir, opt.name, 'web')
@@ -45,27 +44,14 @@ class Visualizer():
     def display_current_results(self, visuals, epoch, step):
 
         ## convert tensors to numpy arrays
+        visuals_tensor = {}
+        for key, item in visuals.items():
+            visuals_tensor[key] = item
         visuals = self.convert_visuals_to_numpy(visuals)
                 
         if self.tf_log: # show images in tensorboard output
-            img_summaries = []
-            for label, image_numpy in visuals.items():
-                # Write the image to a string
-                try:
-                    s = StringIO()
-                except:
-                    s = BytesIO()
-                if len(image_numpy.shape) >= 4:
-                    image_numpy = image_numpy[0]
-                scipy.misc.toimage(image_numpy).save(s, format="jpeg")
-                # Create an Image object
-                img_sum = self.tf.Summary.Image(encoded_image_string=s.getvalue(), height=image_numpy.shape[0], width=image_numpy.shape[1])
-                # Create a Summary value
-                img_summaries.append(self.tf.Summary.Value(tag=label, image=img_sum))
-
-            # Create and write Summary
-            summary = self.tf.Summary(value=img_summaries)
-            self.writer.add_summary(summary, step)
+            for label, image_numpy in visuals_tensor.items():
+                self.writer.add_images(label, image_numpy, step)
 
         if self.use_html: # save images to a html file
             for label, image_numpy in visuals.items():
@@ -112,8 +98,7 @@ class Visualizer():
         if self.tf_log:
             for tag, value in errors.items():
                 value = value.mean().float()
-                summary = self.tf.Summary(value=[self.tf.Summary.Value(tag=tag, simple_value=value)])
-                self.writer.add_summary(summary, step)
+                self.writer.add_scalar(tag, value, step)
 
     # errors: same format as |errors| of plotCurrentErrors
     def print_current_errors(self, epoch, i, errors, t):

@@ -10,6 +10,9 @@ import dataloader
 from util.iter_counter import IterationCounter
 from util.visualizer import Visualizer
 from trainers.pix2pix_trainer import Pix2PixTrainer
+from utils import util
+from utils.normalize import denormalize
+import numpy as np
 
 # parse options
 opt = TrainOptions().parse()
@@ -18,9 +21,8 @@ opt = TrainOptions().parse()
 print(' '.join(sys.argv))
 
 # load the dataset
-#dataloader = dataloader.create_dataset(opt)
+# dataloader = dataloader.create_dataset(opt)
 dataloader = dataloader.SafebooruDataLoader(opt)
-
 
 # create trainer for our model
 trainer = Pix2PixTrainer(opt)
@@ -51,20 +53,17 @@ for epoch in iter_counter.training_epochs():
                                             losses, iter_counter.time_per_iter)
             visualizer.plot_current_errors(losses, iter_counter.total_steps_so_far)
 
-        from utils import util
-        from utils.normalize import denormalize
-        import numpy as np
-        import torch
         if iter_counter.needs_displaying():
-        # if True:
+            # if True:
             # hint visualization
-            mask_B = np.repeat(data_i['instance'][:,:1,:,:],3,1)
-            hint_B = data_i['instance'][:,1:,:,:]
+            mask_B = np.repeat(data_i['instance'][:, :1, :, :], 3, 1)
+            hint_B = data_i['instance'][:, 1:, :, :]
             hint_vis = np.multiply(mask_B, hint_B)
 
             visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
-                                   ('synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
-                                   ('real_image', np.repeat(data_i['image'],3,1)),
+                                   (
+                                   'synthesized_image', util.lab2rgb(denormalize(trainer.get_latest_generated()), opt)),
+                                   ('real_image', np.repeat(data_i['image'], 3, 1)),
                                    ('hint_image', util.lab2rgb(denormalize(hint_vis), opt))])
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
@@ -78,7 +77,7 @@ for epoch in iter_counter.training_epochs():
     iter_counter.record_epoch_end()
 
     if epoch % opt.save_epoch_freq == 0 or \
-       epoch == iter_counter.total_epochs:
+            epoch == iter_counter.total_epochs:
         print('saving the model at the end of epoch %d, iters %d' %
               (epoch, iter_counter.total_steps_so_far))
         trainer.save('latest')
