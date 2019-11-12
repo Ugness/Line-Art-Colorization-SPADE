@@ -19,26 +19,38 @@ def get_normalize_value(opt):
     color_paths = make_dataset(color_dir)
     color_paths = sorted(color_paths)
 
-    transform = get_transform(opt)
+    transform = transforms.ToTensor()
 
     mean_ = []
     std_ = []
+    min_ = []
+    max_ = []
+
+    for path in color_paths:
+        color_img = Image.open(path).convert('RGB')
+        # color_img = transform(color_img).unsqueeze(0)
+        numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
+
+        img_mean = np.mean(numpy_img, axis=(1, 2))
+        img_min = np.min(numpy_img, axis=(1, 2))
+        img_max = np.max(numpy_img, axis=(1, 2))
+
+        mean_.append(img_mean)
+        min_.append(img_min)
+        max_.append(img_max)
+
+    mean_ = np.array(mean_).mean(axis=0)
+    min_ = np.array(min_).min(axis=0)
+    max_ = np.array(max_).max(axis=0)
 
     for path in color_paths:
         color_img = Image.open(path).convert('RGB')
         color_img = transform(color_img).unsqueeze(0)
         numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
 
-        img_mean = np.mean(numpy_img, axis=(1, 2))
-        img_std = np.std(numpy_img, axis=(1, 2), ddof=1)  # ddof=1 => stdev = L2/(N-1)
-
-        mean_.append(img_mean)
-        std_.append(img_std)
-
-    mean_ = np.array(mean_).mean(axis=0)
     std_ = np.array(std_).mean(axis=0)
 
-    return mean_, std_
+    return mean_, std_, min_, max_
 
 
 mean = torch.tensor([0.32856414, 0.0368233, 0.02034278])

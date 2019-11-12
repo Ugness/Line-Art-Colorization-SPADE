@@ -58,7 +58,7 @@ for epoch in iter_counter.training_epochs():
             # hint visualization
             mask_B = np.repeat(data_i['instance'][:, :1, :, :], 3, 1)
             hint_B = data_i['instance'][:, 1:, :, :]
-            hint_vis = np.multiply(mask_B, hint_B)
+            hint_vis = np.multiply(data_i['label'], 1 - mask_B) + np.multiply(mask_B, hint_B)
 
             visuals = OrderedDict([('input_label', util.lab2rgb(denormalize(data_i['label']), opt)),
                                    (

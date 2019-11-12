@@ -38,8 +38,8 @@ class SafebooruDataset(BaseDataset):
 
         folder = ['line', 'sketch']
         category = ['enhanced', 'original', 'pured']
-        idx1 = (torch.randint(0, 2, (1, ))).item()
-        idx2 = (torch.randint(0, 3, (1, ))).item()
+        idx1 = (torch.randint(0, 2, (1,))).item()
+        idx2 = (torch.randint(0, 3, (1,))).item()
         dir = os.path.join(folder[idx1], category[idx2])
 
         self.line_dir = os.path.join(opt.dataroot, dir)
@@ -62,18 +62,17 @@ class SafebooruDataset(BaseDataset):
         line_w, line_h = line_img.size
 
         n = min(color_w, color_h, line_w, line_h)
-        pre_transform = transforms.Resize(n, Image.BICUBIC) # Fit all image to same size n*n
+        pre_transform = transforms.Resize(n, Image.BICUBIC)  # Fit all image to same size n*n
 
-        color_img = pre_transform(color_img) # Size of n*n*3
-        line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2) # Size of n*n*1
+        color_img = pre_transform(color_img)  # Size of n*n*3
+        line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2)  # Size of n*n*1
 
         transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
 
-        color_img = transformed_img[0:3, :, :].unsqueeze(0) # Size of 1*3*m*m
-        line_img = transformed_img[[3,], :, :].unsqueeze(0) # Size of 1*1*m*m
+        color_img = transformed_img[0:3, :, :].unsqueeze(0)  # Size of 1*3*m*m
+        line_img = transformed_img[[3, ], :, :].unsqueeze(0)  # Size of 1*1*m*m
 
         return color_img, line_img
-
 
     def __getitem__(self, index):
         color_path = self.color_paths[index]
