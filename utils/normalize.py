@@ -12,6 +12,7 @@ from dataloader.image_folder import make_dataset
 
 
 def get_normalize_value(opt):
+    from tqdm import tqdm
     opt = opt
     root = opt.dataroot
 
@@ -22,13 +23,12 @@ def get_normalize_value(opt):
     transform = transforms.ToTensor()
 
     mean_ = []
-    std_ = []
     min_ = []
     max_ = []
 
-    for path in color_paths:
+    for path in tqdm(color_paths):
         color_img = Image.open(path).convert('RGB')
-        # color_img = transform(color_img).unsqueeze(0)
+        color_img = transform(color_img).unsqueeze(0)
         numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
 
         img_mean = np.mean(numpy_img, axis=(1, 2))
@@ -43,12 +43,16 @@ def get_normalize_value(opt):
     min_ = np.array(min_).min(axis=0)
     max_ = np.array(max_).max(axis=0)
 
-    for path in color_paths:
+    var_ = []
+    for path in tqdm(color_paths):
         color_img = Image.open(path).convert('RGB')
         color_img = transform(color_img).unsqueeze(0)
         numpy_img = util.rgb2lab(color_img, opt)[0, :, :, :].numpy()
+        # Should divide by N-1 for sample var, but just use N. N is large enough.
+        img_var = np.mean(numpy_img-mean_, axis=(1, 2))
+        var_.append(img_var)
 
-    std_ = np.array(std_).mean(axis=0)
+    std_ = np.sqrt(np.array(var_).mean(axis=0))
 
     return mean_, std_, min_, max_
 
