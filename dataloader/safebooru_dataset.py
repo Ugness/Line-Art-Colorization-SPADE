@@ -88,6 +88,9 @@ class SafebooruDataset(BaseDataset):
 
         color_img, line_img = self.sync_transform(color_img, line_img)
 
+        color_img = normalize(color_img)
+        line_img = normalize(line_img)
+
         # Target tensor: normalized Lab color image
         target_tensor = color_img.squeeze(0)
 
@@ -101,9 +104,9 @@ class SafebooruDataset(BaseDataset):
         sketch_tensor = line_img.squeeze(0)
         image_path = line_path
 
-        return {'label': normalize(real_image),
-                'instance': normalize(hint_tensor),
-                'image': normalize(sketch_tensor),
+        return {'label': real_image,
+                'instance': hint_tensor,
+                'image': sketch_tensor,
                 'path': image_path,
                 }
 
