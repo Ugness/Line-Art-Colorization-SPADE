@@ -5,6 +5,7 @@ import torch
 from PIL import Image
 from torchvision.transforms import transforms
 import torchvision.transforms.functional as F
+from utils.normalize import normalize
 
 import utils.util as util
 from dataloader.base_dataset import BaseDataset, get_transform
@@ -100,9 +101,9 @@ class SafebooruDataset(BaseDataset):
         sketch_tensor = line_img.squeeze(0)
         image_path = line_path
 
-        return {'label': real_image,
-                'instance': hint_tensor,
-                'image': sketch_tensor,
+        return {'label': normalize(real_image),
+                'instance': normalize(hint_tensor),
+                'image': normalize(sketch_tensor),
                 'path': image_path,
                 }
 

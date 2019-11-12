@@ -11,6 +11,7 @@ from util.iter_counter import IterationCounter
 from util.visualizer import Visualizer
 from trainers.pix2pix_trainer import Pix2PixTrainer
 from utils import util
+from utils.normalize import denormalize
 import numpy as np
 
 # parse options
@@ -66,7 +67,7 @@ for epoch in iter_counter.training_epochs():
                                    ('real_image', np.repeat(data_i['image'], 3, 1)),
                                    ('hint_image', hint_vis)])
             for key, item in visuals.items():
-                visuals[key] = item * 0.5 + 0.5
+                visuals[key] = denormalize(item)
             visualizer.display_current_results(visuals, epoch, iter_counter.total_steps_so_far)
 
         if iter_counter.needs_saving():

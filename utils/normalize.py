@@ -62,35 +62,18 @@ def get_normalize_value(opt):
 # std = torch.tensor([0.23836923, 0.08061118, 0.08756524])
 #
 #
-# def normalize(image, batch=False):
-#     """
-#     Normalize the image in Lab space.
-#     :param batch:
-#     :param image:
-#     :return normalized image:
-#     """
-#     transform = transforms.Normalize(mean, std)
-#     if batch:
-#         for nn in range(image.shape[0]):
-#             image[nn, :, :, :] = transform(image[nn, :, :, :])
-#     else:
-#         image = transform(image)
-#     return image
-#
-#
-# def denormalize(image, CHW=True):
-#     """
-#     :param image: {N, H, W, C} {N, C, H, W}
-#     :param CHW: or HWC?
-#     :return: denormalized image
-#     """
-#     if CHW:
-#         _std = std.view(3, 1, 1).to(image.device)
-#         _mean = mean.view(3, 1, 1).to(image.device)
-#     else:
-#         _std = std.view(1, 1, 3).to(image.device)
-#         _mean = mean.view(1, 1, 3).to(image.device)
-#     return (image * _std) + _mean
+def normalize(image):
+
+    return (image - 0.5) / 0.5
+
+
+def denormalize(image, CHW=True):
+    """
+    :param image: {N, H, W, C} {N, C, H, W}
+    :param CHW: or HWC?
+    :return: denormalized image
+    """
+    return (image * 0.5) + 0.5
 
 
 if __name__ == '__main__':
