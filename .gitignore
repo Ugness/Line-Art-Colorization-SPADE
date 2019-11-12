@@ -1,3 +1,4 @@
 */model.pth
 *.pyc
 data/
+checkpoints/

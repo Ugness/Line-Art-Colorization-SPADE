@@ -9,7 +9,9 @@ import torch.nn.functional as F
 import torchvision
 import torch.nn.utils.spectral_norm as spectral_norm
 from models.networks.normalization import SPADE
+from models.networks.reflect_conv import Conv2d
 
+ConvLayer = Conv2d
 
 # ResNet block that uses SPADE.
 # It differs from the ResNet block of pix2pixHD in that
@@ -26,10 +28,10 @@ class SPADEResnetBlock(nn.Module):
         fmiddle = min(fin, fout)
 
         # create conv layers
-        self.conv_0 = nn.Conv2d(fin, fmiddle, kernel_size=3, padding=1)
-        self.conv_1 = nn.Conv2d(fmiddle, fout, kernel_size=3, padding=1)
+        self.conv_0 = ConvLayer(fin, fmiddle, kernel_size=3, padding=1)
+        self.conv_1 = ConvLayer(fmiddle, fout, kernel_size=3, padding=1)
         if self.learned_shortcut:
-            self.conv_s = nn.Conv2d(fin, fout, kernel_size=1, bias=False)
+            self.conv_s = ConvLayer(fin, fout, kernel_size=1, bias=False)
 
         # apply spectral norm if specified
         if 'spectral' in opt.norm_G:
@@ -77,10 +79,10 @@ class ResnetBlock(nn.Module):
         pw = (kernel_size - 1) // 2
         self.conv_block = nn.Sequential(
             nn.ReflectionPad2d(pw),
-            norm_layer(nn.Conv2d(dim, dim, kernel_size=kernel_size)),
+            norm_layer(ConvLayer(dim, dim, kernel_size=kernel_size)),
             activation,
             nn.ReflectionPad2d(pw),
-            norm_layer(nn.Conv2d(dim, dim, kernel_size=kernel_size))
+            norm_layer(ConvLayer(dim, dim, kernel_size=kernel_size))
         )
 
     def forward(self, x):

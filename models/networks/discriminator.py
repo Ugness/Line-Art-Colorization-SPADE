@@ -9,7 +9,9 @@ import torch.nn.functional as F
 from models.networks.base_network import BaseNetwork
 from models.networks.normalization import get_nonspade_norm_layer
 import util.util as util
+from models.networks.reflect_conv import Conv2d
 
+ConvLayer = Conv2d
 
 class MultiscaleDiscriminator(BaseNetwork):
     @staticmethod
@@ -81,19 +83,19 @@ class NLayerDiscriminator(BaseNetwork):
         input_nc = self.compute_D_input_nc(opt)
 
         norm_layer = get_nonspade_norm_layer(opt, opt.norm_D)
-        sequence = [[nn.Conv2d(input_nc, nf, kernel_size=kw, stride=2, padding=padw),
+        sequence = [[ConvLayer(input_nc, nf, kernel_size=kw, stride=2, padding=padw),
                      nn.LeakyReLU(0.2, False)]]
 
         for n in range(1, opt.n_layers_D):
             nf_prev = nf
             nf = min(nf * 2, 512)
             stride = 1 if n == opt.n_layers_D - 1 else 2
-            sequence += [[norm_layer(nn.Conv2d(nf_prev, nf, kernel_size=kw,
+            sequence += [[norm_layer(ConvLayer(nf_prev, nf, kernel_size=kw,
                                                stride=stride, padding=padw)),
                           nn.LeakyReLU(0.2, False)
                           ]]
 
-        sequence += [[nn.Conv2d(nf, 1, kernel_size=kw, stride=1, padding=padw)]]
+        sequence += [[ConvLayer(nf, 1, kernel_size=kw, stride=1, padding=padw)]]
 
         # We divide the layers into groups to extract intermediate layer outputs
         for n in range(len(sequence)):

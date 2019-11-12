@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision.transforms import transforms
+import torchvision.transforms.functional as F
 
-import utils.normalize as normalize
 import utils.util as util
 from dataloader.base_dataset import BaseDataset, get_transform
 from dataloader.image_folder import make_dataset
@@ -62,13 +62,12 @@ class SafebooruDataset(BaseDataset):
         line_w, line_h = line_img.size
 
         n = min(color_w, color_h, line_w, line_h)
-        pre_transform = transforms.Resize(n, Image.BICUBIC)  # Fit all image to same size n*n
 
-        color_img = pre_transform(color_img)  # Size of n*n*3
-        line_img = np.expand_dims(np.array(pre_transform(line_img)), axis=2)  # Size of n*n*1
+        color_img = F.resize(color_img, n)  # Size of n*n*3
+        line_img = F.resize(line_img, n, Image.NEAREST)
+        line_img = np.expand_dims(np.array(line_img), axis=2)  # Size of n*n*1
 
         transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
-        transformed_img = (transformed_img - 0.5) / 0.5     # Normalize image to make problem easier with tanh
 
         color_img = transformed_img[0:3, :, :].unsqueeze(0)  # Size of 1*3*m*m
         line_img = transformed_img[[3, ], :, :].unsqueeze(0)  # Size of 1*1*m*m

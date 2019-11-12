@@ -10,7 +10,9 @@ from models.networks.base_network import BaseNetwork
 from models.networks.normalization import get_nonspade_norm_layer
 from models.networks.architecture import ResnetBlock as ResnetBlock
 from models.networks.architecture import SPADEResnetBlock as SPADEResnetBlock
+from models.networks.reflect_conv import Conv2d
 
+ConvLayer = Conv2d
 
 class SPADEGenerator(BaseNetwork):
     @staticmethod
@@ -35,7 +37,7 @@ class SPADEGenerator(BaseNetwork):
         else:
             # Otherwise, we make the network deterministic by starting with
             # downsampled segmentation map instead of random z
-            self.fc = nn.Conv2d(self.opt.semantic_nc, 16 * nf, 3, padding=1)
+            self.fc = ConvLayer(self.opt.semantic_nc, 16 * nf, 3, padding=1)
 
         self.head_0 = SPADEResnetBlock(16 * nf, 16 * nf, opt)
 
@@ -53,7 +55,7 @@ class SPADEGenerator(BaseNetwork):
             self.up_4 = SPADEResnetBlock(1 * nf, nf // 2, opt)
             final_nc = nf // 2
 
-        self.conv_img = nn.Conv2d(final_nc, 3, 3, padding=1)
+        self.conv_img = ConvLayer(final_nc, 3, 3, padding=1)
 
         self.up = nn.Upsample(scale_factor=2)
 
@@ -142,7 +144,7 @@ class Pix2PixHDGenerator(BaseNetwork):
 
         # initial conv
         model += [nn.ReflectionPad2d(opt.resnet_initial_kernel_size // 2),
-                  norm_layer(nn.Conv2d(input_nc, opt.ngf,
+                  norm_layer(ConvLayer(input_nc, opt.ngf,
                                        kernel_size=opt.resnet_initial_kernel_size,
                                        padding=0)),
                   activation]
@@ -150,7 +152,7 @@ class Pix2PixHDGenerator(BaseNetwork):
         # downsample
         mult = 1
         for i in range(opt.resnet_n_downsample):
-            model += [norm_layer(nn.Conv2d(opt.ngf * mult, opt.ngf * mult * 2,
+            model += [norm_layer(ConvLayer(opt.ngf * mult, opt.ngf * mult * 2,
                                            kernel_size=3, stride=2, padding=1)),
                       activation]
             mult *= 2
@@ -174,7 +176,7 @@ class Pix2PixHDGenerator(BaseNetwork):
 
         # final output conv
         model += [nn.ReflectionPad2d(3),
-                  nn.Conv2d(nc_out, opt.output_nc, kernel_size=7, padding=0),
+                  ConvLayer(nc_out, opt.output_nc, kernel_size=7, padding=0),
                   nn.Tanh()]
 
         self.model = nn.Sequential(*model)
