@@ -66,6 +66,7 @@ class BaseOptions():
         # parser.add_argument('--no_instance', action='store_true', help='if specified, do *not* add instance map as input')
         parser.add_argument('--nef', type=int, default=16, help='# of encoder filters in the first conv layer')
         parser.add_argument('--use_vae', action='store_true', help='enable training with an image encoder.')
+        parser.add_argument('--use_F', action='store_true')
 
         self.initialized = True
         return parser

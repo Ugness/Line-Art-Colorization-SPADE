@@ -22,7 +22,7 @@ class Pix2PixModel(torch.nn.Module):
         self.ByteTensor = torch.cuda.ByteTensor if self.use_gpu() \
             else torch.ByteTensor
 
-        self.netG, self.netD, self.netE = self.initialize_networks(opt)
+        self.netG, self.netD, self.netE, self.netF = self.initialize_networks(opt)
 
         # set loss functions
         if opt.isTrain:
@@ -39,7 +39,7 @@ class Pix2PixModel(torch.nn.Module):
     # can't parallelize custom functions, we branch to different
     # routines based on |mode|.
     def forward(self, data, mode):
-        input_semantics, real_image = self.preprocess_input(data)
+        input_semantics, real_image = self.preprocess_input(data)   # in_sec ->sketch+hint, real_image -> color
 
         if mode == 'generator':
             g_loss, generated = self.compute_generator_loss(
@@ -63,6 +63,8 @@ class Pix2PixModel(torch.nn.Module):
         G_params = list(self.netG.parameters())
         if opt.use_vae:
             G_params += list(self.netE.parameters())
+        if opt.use_F:
+            G_params += list(self.netF.parameters())
         if opt.isTrain:
             D_params = list(self.netD.parameters())
 
@@ -82,6 +84,8 @@ class Pix2PixModel(torch.nn.Module):
         util.save_network(self.netD, 'D', epoch, self.opt)
         if self.opt.use_vae:
             util.save_network(self.netE, 'E', epoch, self.opt)
+        if self.opt.use_F:
+            util.save_network(self.netF, 'F', epoch, self.opt)
 
     ############################################################################
     # Private helper methods
@@ -91,6 +95,7 @@ class Pix2PixModel(torch.nn.Module):
         netG = networks.define_G(opt)
         netD = networks.define_D(opt) if opt.isTrain else None
         netE = networks.define_E(opt) if opt.use_vae else None
+        netF = networks.define_F(opt) if opt.use_F else None
 
         if not opt.isTrain or opt.continue_train:
             netG = util.load_network(netG, 'G', opt.which_epoch, opt)
@@ -98,8 +103,9 @@ class Pix2PixModel(torch.nn.Module):
                 netD = util.load_network(netD, 'D', opt.which_epoch, opt)
             if opt.use_vae:
                 netE = util.load_network(netE, 'E', opt.which_epoch, opt)
-
-        return netG, netD, netE
+            if opt.use_F:
+                netF = util.load_network(netF, 'F', opt.which_epoch, opt)
+        return netG, netD, netE, netF
 
     # preprocess the input, such as moving the tensors to GPUs and
     # transforming the label map to one-hot encoding
@@ -117,8 +123,10 @@ class Pix2PixModel(torch.nn.Module):
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
-        # 5-channel semantic map
-        input_semantics = torch.cat((data['image'], data['instance']), dim=1)
+        sketch_feature = self.netF(data['image'])
+
+        # 5+128-channel semantic map
+        input_semantics = torch.cat((data['image'], data['instance'], sketch_feature), dim=1)
 
         # # create one-hot label map
         # label_map = data['label']
@@ -171,6 +179,7 @@ class Pix2PixModel(torch.nn.Module):
 
     def compute_discriminator_loss(self, input_semantics, real_image):
         D_losses = {}
+        input_semantics = input_semantics.detach()
         with torch.no_grad():
             fake_image, _ = self.generate_fake(input_semantics, real_image)
             fake_image = fake_image.detach()

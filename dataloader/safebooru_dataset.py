@@ -19,7 +19,7 @@ class SafebooruDataset(BaseDataset):
         parser.set_defaults(loadSize=512)
         parser.set_defaults(crop_size=512)
         parser.set_defaults(preprocess_mode='scale_width')
-        parser.set_defaults(label_nc=5)
+        parser.set_defaults(label_nc=5+128)
 
         parser.add_argument('--l_norm', type=float, default=100.)
         parser.add_argument('--l_cent', type=float, default=50.)
