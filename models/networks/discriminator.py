@@ -45,7 +45,7 @@ class MultiscaleDiscriminator(BaseNetwork):
             raise ValueError('unrecognized discriminator subarchitecture %s' % subarch)
         return netD
 
-    def downsample(self, input):
+    def downsample(self, input): # how about interpolate with nearest?
         return F.avg_pool2d(input, kernel_size=3,
                             stride=2, padding=[1, 1],
                             count_include_pad=False)

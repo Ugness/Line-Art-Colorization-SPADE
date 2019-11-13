@@ -37,7 +37,7 @@ class ConvEncoder(BaseNetwork):
         self.actvn = nn.LeakyReLU(0.2, False)
         self.opt = opt
 
-    def forward(self, x):
+    def forward(self, x):   # x -> color image
         if x.size(2) != 256 or x.size(3) != 256:
             x = F.interpolate(x, size=(256, 256), mode='bilinear')
 

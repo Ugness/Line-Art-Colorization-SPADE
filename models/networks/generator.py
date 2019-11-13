@@ -24,7 +24,7 @@ class SPADEGenerator(BaseNetwork):
 
         return parser
 
-    def __init__(self, opt):
+    def __init__(self, opt):     # LadderNet 추가할 경우 여기에 추가하면 됨. 각 seg 들어가기 전에 변경.
         super().__init__()
         self.opt = opt
         nf = opt.ngf
