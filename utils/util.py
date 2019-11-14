@@ -209,8 +209,8 @@ def add_color_patches_rand_gt(data, opt, p=.125, num_points=None, use_avg=True, 
             # add color point
             if (use_avg):
                 # embed()
-                data['hint_B'][nn, :, h:h + P, w:w + P] = torch.mean(
-                    torch.mean(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True), dim=1, keepdim=True).view(1, C,
+                data['hint_B'][nn, :, h:h + P, w:w + P] = torch.median(
+                    torch.median(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True), dim=1, keepdim=True).view(1, C,
                                                                                                                    1, 1)
             else:
                 data['hint_B'][nn, :, h:h + P, w:w + P] = data['B'][nn, :, h:h + P, w:w + P]
