@@ -123,3 +123,26 @@ class VGG19(torch.nn.Module):
         h_relu5 = self.slice5(h_relu4)
         out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
         return out
+
+
+class BooruNet(torch.nn.Module):
+    def __init__(self, requires_grad=False):
+        super().__init__()
+        model = torch.hub.load('RF5/danbooru-pretrained', 'resnet18')[0]
+        self.slice1 = model[:4]
+        self.slice2 = model[5]
+        self.slice3 = model[6]
+        self.slice4 = model[7]
+        self.slice5 = model[8]
+        if not requires_grad:
+            for param in self.parameters():
+                param.requires_grad = False
+
+    def forward(self, X):
+        h_relu1 = self.slice1(X)
+        h_relu2 = self.slice2(h_relu1)
+        h_relu3 = self.slice3(h_relu2)
+        h_relu4 = self.slice4(h_relu3)
+        h_relu5 = self.slice5(h_relu4)
+        out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
+        return out

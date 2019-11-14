@@ -32,8 +32,14 @@ class Pix2PixModel(torch.nn.Module):
             self.criterionFeat = torch.nn.L1Loss()
             if not opt.no_vgg_loss:
                 self.criterionVGG = networks.VGGLoss(self.opt.gpu_ids)
+            if opt.booru_loss and opt.no_vgg_loss:
+                self.criterionBooru = networks.BooruLoss(self.opt.gpu_ids)
             if opt.use_vae:
                 self.KLDLoss = networks.KLDLoss()
+            if opt.L2_loss:
+                self.L2Loss = torch.nn.MSELoss()
+            if opt.L1_loss:
+                self.L1Loss = torch.nn.L1Loss()
 
     # Entry point for all calls involving forward pass
     # of deep networks. We used this approach since DataParallel module
@@ -47,8 +53,11 @@ class Pix2PixModel(torch.nn.Module):
                 input_semantics, real_image)
             return g_loss, generated
         elif mode == 'discriminator':
-            d_loss = self.compute_discriminator_loss(
-                input_semantics, real_image)
+            if not self.opt.no_GAN:
+                d_loss = self.compute_discriminator_loss(
+                    input_semantics, real_image)
+            else:
+                d_loss = 0
             return d_loss
         elif mode == 'encode_only':
             z, mu, logvar = self.encode_z(real_image)
@@ -124,10 +133,11 @@ class Pix2PixModel(torch.nn.Module):
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
-        sketch_feature = F.interpolate(self.netF(data['image']), size=data['image'].size(3), mode='bilinear')
+        input_semantics = torch.cat((data['image'], data['instance']), dim=1)
+        sketch_feature = F.interpolate(self.netF(input_semantics), size=data['image'].size(3), mode='bilinear')
 
         # 5+128-channel semantic map
-        input_semantics = torch.cat((data['image'], data['instance'], sketch_feature), dim=1)
+        input_semantics = torch.cat((input_semantics, sketch_feature), dim=1)
 
         # # create one-hot label map
         # label_map = data['label']
@@ -156,9 +166,9 @@ class Pix2PixModel(torch.nn.Module):
 
         pred_fake, pred_real = self.discriminate(
             input_semantics, fake_image, real_image)
-
-        G_losses['GAN'] = self.criterionGAN(pred_fake, True,
-                                            for_discriminator=False)
+        if not self.opt.no_GAN:
+            G_losses['GAN'] = self.criterionGAN(pred_fake, True,
+                                                for_discriminator=False)
 
         if not self.opt.no_ganFeat_loss:
             num_D = len(pred_fake)
@@ -175,7 +185,15 @@ class Pix2PixModel(torch.nn.Module):
         if not self.opt.no_vgg_loss:
             G_losses['VGG'] = self.criterionVGG(fake_image, real_image) \
                 * self.opt.lambda_vgg
-
+        if self.opt.booru_loss and self.opt.no_vgg_loss:
+            G_losses['Booru'] = self.criterionBooru(fake_image, real_image) \
+                * self.opt.lambda_vgg
+        if self.opt.L2_loss:
+            G_losses['L2'] = self.L2Loss(fake_image, real_image) \
+                                * self.opt.lambda_l1
+        if self.opt.L1_loss:
+            G_losses['L1'] = self.L1Loss(fake_image, real_image) \
+                                * self.opt.lambda_l2
         return G_losses, fake_image
 
     def compute_discriminator_loss(self, input_semantics, real_image):
