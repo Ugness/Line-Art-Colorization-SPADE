@@ -15,7 +15,7 @@ from dataloader.image_folder import make_dataset
 class SafebooruDataset(BaseDataset):
     @staticmethod
     def modify_commandline_options(parser, is_train):
-        parser.set_defaults(findSize=256)
+        parser.set_defaults(fineSize=256)
         parser.set_defaults(loadSize=256)
         parser.set_defaults(crop_size=256)
         parser.set_defaults(preprocess_mode='scale_width')
@@ -96,7 +96,6 @@ class SafebooruDataset(BaseDataset):
         target_tensor = color_img.squeeze(0)
 
         colorization_data = util.get_colorization_data(color_img, self.opt)
-        colorization_data['hint_B'] = colorization_data['hint_B']
 
         # Fit to SPADE
         real_image = target_tensor
