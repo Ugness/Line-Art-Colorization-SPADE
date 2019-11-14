@@ -53,11 +53,8 @@ class Pix2PixModel(torch.nn.Module):
                 input_semantics, real_image)
             return g_loss, generated
         elif mode == 'discriminator':
-            if not self.opt.no_GAN:
-                d_loss = self.compute_discriminator_loss(
-                    input_semantics, real_image)
-            else:
-                d_loss = 0
+            d_loss = self.compute_discriminator_loss(
+                input_semantics, real_image)
             return d_loss
         elif mode == 'encode_only':
             z, mu, logvar = self.encode_z(real_image)
