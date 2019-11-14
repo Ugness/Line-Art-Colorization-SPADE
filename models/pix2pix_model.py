@@ -133,11 +133,11 @@ class Pix2PixModel(torch.nn.Module):
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
-        input_semantics = torch.cat((data['image'], data['instance']), dim=1)
-        sketch_feature = F.interpolate(self.netF(input_semantics), size=data['image'].size(3), mode='bilinear')
-
         # 5+128-channel semantic map
-        input_semantics = torch.cat((input_semantics, sketch_feature), dim=1)
+        input_semantics = torch.cat((data['image'], data['instance']), dim=1)
+        if self.opt.use_F:
+            sketch_feature = F.interpolate(self.netF(input_semantics), size=data['image'].size(3), mode='bilinear')
+            input_semantics = torch.cat((input_semantics, sketch_feature), dim=1)
 
         # # create one-hot label map
         # label_map = data['label']

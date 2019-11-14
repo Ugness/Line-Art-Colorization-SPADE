@@ -23,5 +23,5 @@ class SketchFeatureExtractor(BaseNetwork):
         model = torch.hub.load('RF5/danbooru-pretrained', 'resnet18')
         self.model = nn.Sequential(convlayer(5, 64, 7, 2, padding=3, bias=False), model[0][1:], convlayer(512, 128, 1))
 
-    def forward(self, images):  # return (N, 512, H, W)
-        return self.model(images.repeat(1, 3, 1, 1))
+    def forward(self, images):  # return (N, 128, H, W)
+        return self.model(images)
