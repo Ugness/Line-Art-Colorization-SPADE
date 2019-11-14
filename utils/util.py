@@ -158,7 +158,7 @@ def get_colorization_data(data_lab, opt, ab_thresh=5., p=.125, num_points=None):
         thresh = 1. * ab_thresh / opt.ab_norm
         mask = torch.sum(torch.abs(
             torch.max(torch.max(data['B'], dim=3)[0], dim=2)[0] - torch.min(torch.min(data['B'], dim=3)[0], dim=2)[0]),
-                         dim=1) >= thresh
+            dim=1) >= thresh
         if not (torch.sum(mask) == 0):
             data['A'] = data['A'][mask, :, :, :]
             data['B'] = data['B'][mask, :, :, :]
@@ -210,8 +210,8 @@ def add_color_patches_rand_gt(data, opt, p=.125, num_points=None, use_avg=True, 
             if (use_avg):
                 # embed()
                 data['hint_B'][nn, :, h:h + P, w:w + P] = torch.median(
-                    torch.median(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True), dim=1, keepdim=True).view(1, C,
-                                                                                                                   1, 1)
+                    torch.median(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True)[0], dim=1, keepdim=True)[
+                    0].view(1, C, 1, 1)
             else:
                 data['hint_B'][nn, :, h:h + P, w:w + P] = data['B'][nn, :, h:h + P, w:w + P]
 
