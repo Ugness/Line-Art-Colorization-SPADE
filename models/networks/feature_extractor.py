@@ -12,8 +12,15 @@ class SketchFeatureExtractor(BaseNetwork):
     def __init__(self, opt):
         self.opt = opt
         super(SketchFeatureExtractor, self).__init__()
+        def convlayer(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True):
+            return nn.Sequential(
+                SynchronizedBatchNorm2d(in_channels),
+                Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias),
+                nn.LeakyReLU(0.2)
+            )
+
         model = torch.hub.load('RF5/danbooru-pretrained', 'resnet18')
-        self.model = model[0]
+        self.model = nn.Sequential(model[0], convlayer(512, 128, 1))
 
     def forward(self, images):  # return (N, 512, H, W)
         return self.model(images.repeat(1, 3, 1, 1))

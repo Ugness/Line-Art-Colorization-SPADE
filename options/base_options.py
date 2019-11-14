@@ -160,7 +160,7 @@ class BaseOptions():
         # This will be convenient in many places
         opt.semantic_nc = opt.label_nc
         if opt.use_F:
-            opt.semantic_nc += 512
+            opt.semantic_nc += 128
 
         # set gpu ids
         str_ids = opt.gpu_ids.split(',')
