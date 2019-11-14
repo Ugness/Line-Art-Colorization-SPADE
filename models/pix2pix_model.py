@@ -179,11 +179,14 @@ class Pix2PixModel(torch.nn.Module):
 
     def compute_discriminator_loss(self, input_semantics, real_image):
         D_losses = {}
-        input_semantics = input_semantics.detach()
         with torch.no_grad():
             fake_image, _ = self.generate_fake(input_semantics, real_image)
             fake_image = fake_image.detach()
             fake_image.requires_grad_()
+
+        if self.opt.use_F:
+            input_semantics = input_semantics.detach()
+
 
         pred_fake, pred_real = self.discriminate(
             input_semantics, fake_image, real_image)
@@ -219,8 +222,8 @@ class Pix2PixModel(torch.nn.Module):
     # for each fake and real image.
 
     def discriminate(self, input_semantics, fake_image, real_image):
-        fake_concat = torch.cat([input_semantics, fake_image], dim=1)
-        real_concat = torch.cat([input_semantics, real_image], dim=1)
+        fake_concat = torch.cat([input_semantics[:5], fake_image], dim=1)
+        real_concat = torch.cat([input_semantics[:5], real_image], dim=1)
 
         # In Batch Normalization, the fake and real images are
         # recommended to be in the same batch to avoid disparate
