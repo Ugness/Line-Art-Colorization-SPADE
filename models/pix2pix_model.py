@@ -4,6 +4,7 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 """
 
 import torch
+import torch.nn.functional as F
 import models.networks as networks
 import util.util as util
 
@@ -123,7 +124,7 @@ class Pix2PixModel(torch.nn.Module):
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
-        sketch_feature = self.netF(data['image'])
+        sketch_feature = F.interpolate(self.netF(data['image']), size=data['image'].size(3), mode='bilinear')
 
         # 5+128-channel semantic map
         input_semantics = torch.cat((data['image'], data['instance'], sketch_feature), dim=1)
