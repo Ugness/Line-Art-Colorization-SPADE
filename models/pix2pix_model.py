@@ -222,8 +222,8 @@ class Pix2PixModel(torch.nn.Module):
     # for each fake and real image.
 
     def discriminate(self, input_semantics, fake_image, real_image):
-        fake_concat = torch.cat([input_semantics[:5], fake_image], dim=1)
-        real_concat = torch.cat([input_semantics[:5], real_image], dim=1)
+        fake_concat = torch.cat([input_semantics[:, :5], fake_image], dim=1)
+        real_concat = torch.cat([input_semantics[:, :5], real_image], dim=1)
 
         # In Batch Normalization, the fake and real images are
         # recommended to be in the same batch to avoid disparate
