@@ -39,7 +39,7 @@ class SafebooruDataset(BaseDataset):
         self.color_paths = sorted(self.color_paths)
 
         folder = ['line']
-        self.category = ['enhanced', 'original', 'pured']
+        self.category = os.listdir(os.path.join(opt.dataroot, 'line'))
         idx1 = 0
         self.line_dir = dict()
         self.line_paths = dict()
