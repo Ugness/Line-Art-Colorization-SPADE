@@ -158,9 +158,9 @@ class BaseOptions():
 
         # Set semantic_nc based on the option.
         # This will be convenient in many places
-        opt.semantic_nc = opt.label_nc
-        if opt.use_F:
-            opt.semantic_nc += 128
+        opt.semantic_nc = opt.ngf
+        # if opt.use_F:
+        #     opt.semantic_nc += 128
 
         # set gpu ids
         str_ids = opt.gpu_ids.split(',')

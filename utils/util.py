@@ -171,7 +171,7 @@ def get_colorization_data(data_lab, opt, ab_thresh=5., p=.125, num_points=None):
     return add_color_patches_rand_gt(data, opt, p=p, num_points=num_points)
 
 
-def add_color_patches_rand_gt(data, opt, p=.125, num_points=None, use_avg=True, samp='normal'):
+def add_color_patches_rand_gt(data, opt, p=.125, num_points=None, use_avg=False, samp='normal'):
     # Add random color points sampled from ground truth based on:
     #   Number of points
     #   - if num_points is 0, then sample from geometric distribution, drawn from probability p
@@ -209,9 +209,12 @@ def add_color_patches_rand_gt(data, opt, p=.125, num_points=None, use_avg=True, 
             # add color point
             if (use_avg):
                 # embed()
-                data['hint_B'][nn, :, h:h + P, w:w + P] = torch.median(
-                    torch.median(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True)[0], dim=1, keepdim=True)[
-                    0].view(1, C, 1, 1)
+                # data['hint_B'][nn, :, h:h + P, w:w + P] = torch.median(
+                #     torch.median(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True)[0], dim=1, keepdim=True)[
+                #     0].view(1, C, 1, 1)
+                data['hint_B'][nn, :, h:h + P, w:w + P] = torch.mean(
+                    torch.mean(data['B'][nn, :, h:h + P, w:w + P], dim=2, keepdim=True), dim=1, keepdim=True).view(1, C, 1, 1)
+
             else:
                 data['hint_B'][nn, :, h:h + P, w:w + P] = data['B'][nn, :, h:h + P, w:w + P]
 

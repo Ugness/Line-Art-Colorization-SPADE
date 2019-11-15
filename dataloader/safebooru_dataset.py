@@ -10,7 +10,7 @@ from utils.normalize import normalize
 import utils.util as util
 from dataloader.base_dataset import BaseDataset, get_transform
 from dataloader.image_folder import make_dataset
-
+import random
 
 class SafebooruDataset(BaseDataset):
     @staticmethod
@@ -39,14 +39,15 @@ class SafebooruDataset(BaseDataset):
         self.color_paths = sorted(self.color_paths)
 
         folder = ['line']
-        category = ['enhanced', 'original', 'pured']
-        idx1 = (torch.randint(0, len(folder), (1,))).item()
-        idx2 = (torch.randint(0, len(category), (1,))).item()
-        dir = os.path.join(folder[idx1], category[idx2])
-
-        self.line_dir = os.path.join(opt.dataroot, dir)
-        self.line_paths = make_dataset(self.line_dir)
-        self.line_paths = sorted(self.line_paths)
+        self.category = ['enhanced', 'original', 'pured']
+        idx1 = 0
+        self.line_dir = dict()
+        self.line_paths = dict()
+        for key in self.category:
+            dir = os.path.join(folder[idx1], key)
+            self.line_dir[key] = os.path.join(opt.dataroot, dir)
+            self.line_paths[key] = make_dataset(self.line_dir[key])
+            self.line_paths[key] = sorted(self.line_paths[key])
 
         self.transform = get_transform(opt)
 
@@ -77,10 +78,11 @@ class SafebooruDataset(BaseDataset):
         return color_img, line_img
 
     def __getitem__(self, index):
+        index = index % 100
         color_path = self.color_paths[index]
         color_img = Image.open(color_path).convert('RGB')
-
-        line_path = self.line_paths[index]
+        key = random.choice(self.category)
+        line_path = self.line_paths[key][index]
         line_img = Image.open(line_path).convert('L')
 
         assert self.paths_match(color_path, line_path), \
