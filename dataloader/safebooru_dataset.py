@@ -78,7 +78,7 @@ class SafebooruDataset(BaseDataset):
         return color_img, line_img
 
     def __getitem__(self, index):
-        index = index % 100
+        # index = index % 100
         color_path = self.color_paths[index]
         color_img = Image.open(color_path).convert('RGB')
         key = random.choice(self.category)

@@ -27,6 +27,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--beta1', type=float, default=0.0, help='momentum term of adam')
         parser.add_argument('--beta2', type=float, default=0.9, help='momentum term of adam')
         parser.add_argument('--no_TTUR', action='store_true', help='Use TTUR training scheme')
+        parser.add_argument('--SGDR', action='store_true', help='Use CosineAnnealingLR with warmup')
 
         # the default values for beta1 and beta2 differ by TTUR option
         opt, _ = parser.parse_known_args()

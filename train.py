@@ -45,7 +45,7 @@ for epoch in iter_counter.training_epochs():
 
         # train discriminator
         trainer.run_discriminator_one_step(data_i)
-
+        trainer.scheduler.step(epoch + i * opt.batchSize / len(dataloader))
         if opt.tf_log:
             losses = trainer.get_latest_losses()
             visualizer.plot_current_errors(losses, iter_counter.total_steps_so_far)

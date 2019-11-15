@@ -87,8 +87,10 @@ class Pix2PixModel(torch.nn.Module):
         if opt.radam:
             optimizer_G = RAdam(G_params, lr=G_lr, betas=(beta1, beta2))
             optimizer_D = RAdam(D_params, lr=D_lr, betas=(beta1, beta2))
+        if opt.SGDR:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer_G, 1, T_mult=8)
 
-        return optimizer_G, optimizer_D
+        return optimizer_G, optimizer_D,scheduler
 
     def save(self, epoch):
         util.save_network(self.netG, 'G', epoch, self.opt)
