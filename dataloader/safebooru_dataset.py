@@ -50,6 +50,8 @@ class SafebooruDataset(BaseDataset):
             self.line_paths[key] = sorted(self.line_paths[key])
 
         self.transform = get_transform(opt)
+        if self.opt.hsv_aug:
+            self.hsv_augmenter = transforms.ColorJitter(hue=(-0.3, 0.3))
 
     @staticmethod
     def image_name(path):
@@ -67,9 +69,10 @@ class SafebooruDataset(BaseDataset):
         n = min(color_w, color_h, line_w, line_h)
 
         color_img = F.resize(color_img, n)  # Size of n*n*3
+        if self.opt.hsv_aug:
+            color_img = self.hsv_augmenter(color_img)
         line_img = F.resize(line_img, n, Image.NEAREST)
         line_img = np.expand_dims(np.array(line_img), axis=2)  # Size of n*n*1
-
         transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
 
         color_img = transformed_img[0:3, :, :].unsqueeze(0)  # Size of 1*3*m*m
@@ -88,6 +91,7 @@ class SafebooruDataset(BaseDataset):
         assert self.paths_match(color_path, line_path), \
             "The label_path %s and image_path %s don't match." % \
             (color_path, line_path)
+
 
         color_img, line_img = self.sync_transform(color_img, line_img)
 
