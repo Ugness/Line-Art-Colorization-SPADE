@@ -68,10 +68,10 @@ class SafebooruDataset(BaseDataset):
 
         n = min(color_w, color_h, line_w, line_h)
 
-        color_img = F.resize(color_img, n)  # Size of n*n*3
+        color_img = F.resize(color_img, (n, n))  # Size of n*n*3
         if self.opt.hsv_aug:
             color_img = self.hsv_augmenter(color_img)
-        line_img = F.resize(line_img, n, Image.NEAREST)
+        line_img = F.resize(line_img, (n, n), Image.NEAREST)
         line_img = np.expand_dims(np.array(line_img), axis=2)  # Size of n*n*1
         transformed_img = self.transform(Image.fromarray(np.concatenate([color_img, line_img], axis=2)))
 
