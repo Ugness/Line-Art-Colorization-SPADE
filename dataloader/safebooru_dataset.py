@@ -50,8 +50,8 @@ class SafebooruDataset(BaseDataset):
             self.line_paths[key] = sorted(self.line_paths[key])
 
         self.transform = get_transform(opt)
-        if self.opt.hsv_aug:
-            self.hsv_augmenter = transforms.ColorJitter(hue=(-0.3, 0.3))
+        if self.opt.hsv_aug > 0:
+            self.hsv_augmenter = transforms.ColorJitter(hue=(-self.opt.hsv_aug, self.opt.hsv_aug))
 
     @staticmethod
     def image_name(path):
