@@ -76,7 +76,8 @@ for epoch in iter_counter.training_epochs():
             trainer.save('latest')
             iter_counter.record_current_iter()
 
-    trainer.update_learning_rate(epoch)
+    if not opt.SGDR:
+        trainer.update_learning_rate(epoch)
     iter_counter.record_epoch_end()
 
     if epoch % opt.save_epoch_freq == 0 or \
