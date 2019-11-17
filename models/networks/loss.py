@@ -133,3 +133,70 @@ class BooruLoss(nn.Module):
 class KLDLoss(nn.Module):
     def forward(self, mu, logvar):
         return -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+
+# Loss on HSV Color Space
+
+def rgb2hsv(image):
+    """
+    :param image: NCHW torch.Tensor (RGB) -1 ~ 1
+    :return: NCHW torch.Tensor (HSV)  0 ~ 1
+    """
+    img = image * 0.5 + 0.5
+    hue = torch.Tensor(image.shape[0], image.shape[2], image.shape[3]).to(image.device)
+    # max over dimension 1 (C), [0] for get max value. ([1] -> max index)
+    # B
+    hue[img[:, 2] == img.max(1)[0]] = 4.0 + ((img[:, 0] - img[:, 1]) / (img.max(1)[0] - img.min(1)[0] + 1e-07))[
+        img[:, 2] == img.max(1)[0]]
+    # G
+    hue[img[:, 1] == img.max(1)[0]] = 2.0 + ((img[:, 2] - img[:, 0]) / (img.max(1)[0] - img.min(1)[0] + 1e-07))[
+        img[:, 1] == img.max(1)[0]]
+    # R
+    hue[img[:, 0] == img.max(1)[0]] = (0.0 + ((img[:, 1] - img[:, 2]) / (img.max(1)[0] - img.min(1)[0] + 1e-07))[
+        img[:, 0] == img.max(1)[0]]) % 6
+
+    hue[img.min(1)[0] == img.max(1)[0]] = 0.0
+    hue = hue / 6
+
+    saturation = (img.max(1)[0] - img.min(1)[0]) / (img.max(1)[0] + 1e-07)
+    saturation[img.max(1)[0] == 0] = 0
+
+    value = img.max(1)[0]
+    return torch.stack((hue, saturation, value), dim=1)
+
+
+class HSVTVLoss(nn.Module):
+    """
+    Only calculates total variation on HUE channel.
+    """
+    def forward(self, fake_image, sketch):
+
+        def tv_loss(hsv_image):
+            img = hsv_image[:, [0, ], :, :]
+            h1 = img[:, :, 1:, :]
+            h2 = img[:, :, :-1, :]
+            w1 = img[:, :, :, 1:]
+            w2 = img[:, :, :, :-1]
+            vert = F.interpolate((h1 - h2) ** 2, size=img.shape[2:4], mode='bilinear', align_corners=True)
+            horiz = F.interpolate((w1 - w2) ** 2, size=img.shape[2:4], mode='bilinear', align_corners=True)
+            loss = vert + horiz
+            return loss
+
+        hsv = rgb2hsv(fake_image)
+        loss = tv_loss(hsv)
+        mask = (sketch > 0).float()  # Do not apply TV loss on the sketch
+        return (loss * mask).mean()
+
+
+class HighSVLoss(nn.Module):
+    def forward(self, fake_image, sketch):
+        hsv = rgb2hsv(fake_image)
+        val = hsv[:, [2, ], :, :]
+        hue = hsv[:, [1, ], :, :]
+        v_margin = ((val < 0.1) * (sketch > 0)).float()
+        h_margin = ((hue < 0.1) * (sketch > 0)).float()
+        v_loss = ((1 - val) ** 2)
+        h_loss = ((1 - hue) ** 2)
+        loss = v_loss * v_margin + h_loss * h_margin
+        return loss.mean()
+

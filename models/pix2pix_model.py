@@ -41,6 +41,10 @@ class Pix2PixModel(torch.nn.Module):
                 self.L2Loss = torch.nn.MSELoss()
             if opt.L1_loss:
                 self.L1Loss = torch.nn.L1Loss()
+            if self.opt.hsv_tv:
+                self.hsvTVLoss = networks.HSVTVLoss()
+            if self.opt.high_sv:
+                self.HighSVLoss = networks.HighSVLoss()
 
     # Entry point for all calls involving forward pass
     # of deep networks. We used this approach since DataParallel module
@@ -197,6 +201,13 @@ class Pix2PixModel(torch.nn.Module):
         if self.opt.L1_loss:
             G_losses['L1'] = self.L1Loss(fake_image, real_image) \
                                 * self.opt.lambda_l2
+        if self.opt.hsv_tv:
+            G_losses['HSV_TV'] = self.hsvTVLoss(fake_image, input_semantics[:, [0, ], :, :]) \
+                                * self.opt.lambda_tv
+        if self.opt.high_sv:
+            G_losses['High_SV'] = self.HighSVLoss(fake_image, input_semantics[:, [0, ], :, :]) \
+                                * self.opt.lambda_sv
+
         return G_losses, fake_image
 
     def compute_discriminator_loss(self, input_semantics, real_image):
