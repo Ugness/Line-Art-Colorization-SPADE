@@ -10,6 +10,7 @@ from models.networks.base_network import BaseNetwork
 from models.networks.normalization import get_nonspade_norm_layer
 from models.networks.architecture import ResnetBlock as ResnetBlock
 from models.networks.architecture import SPADEResnetBlock as SPADEResnetBlock
+from models.networks.architecture import LadderNet
 from models.networks.reflect_conv import Conv2d
 
 ConvLayer = Conv2d
@@ -90,25 +91,25 @@ class SPADEGenerator(BaseNetwork):
             x = F.interpolate(seg, size=(self.sh, self.sw))
             x = self.fc(x)
 
-        x = self.head_0(x, seg)
+        x = self.head_0(x, seg)     # 1024, 8, 8 : 256, 256
 
         x = self.up(x)
-        x = self.G_middle_0(x, seg)
+        x = self.G_middle_0(x, seg)     # 1024, 16, 16
 
         if self.opt.num_upsampling_layers == 'more' or \
            self.opt.num_upsampling_layers == 'most':
             x = self.up(x)
 
-        x = self.G_middle_1(x, seg)
+        x = self.G_middle_1(x, seg)     # 1024, 16, 16
 
         x = self.up(x)
-        x = self.up_0(x, seg)
+        x = self.up_0(x, seg)   # 1024, 32, 32
         x = self.up(x)
-        x = self.up_1(x, seg)
+        x = self.up_1(x, seg)   # 512, 64, 64
         x = self.up(x)
-        x = self.up_2(x, seg)
+        x = self.up_2(x, seg)   # 256, 128, 128
         x = self.up(x)
-        x = self.up_3(x, seg)
+        x = self.up_3(x, seg)   # 128, 256, 256
 
         if self.opt.num_upsampling_layers == 'most':
             x = self.up(x)
@@ -183,3 +184,109 @@ class Pix2PixHDGenerator(BaseNetwork):
 
     def forward(self, input, z=None):
         return self.model(input)
+
+
+class SPADELadderGenerator(BaseNetwork):
+    @staticmethod
+    def modify_commandline_options(parser, is_train):
+        parser.set_defaults(norm_G='spectralspadesyncbatch3x3')
+        parser.add_argument('--num_upsampling_layers',
+                            choices=('normal', 'more', 'most'), default='normal',
+                            help="If 'more', adds upsampling layer between the two middle resnet blocks. If 'most', also add one more upsampling + resnet layer at the end of the generator")
+
+        return parser
+
+    def __init__(self, opt):     # LadderNet 추가할 경우 여기에 추가하면 됨. 각 seg 들어가기 전에 변경.
+        super().__init__()
+        self.opt = opt
+        nf = opt.ngf
+
+        self.sw, self.sh = self.compute_latent_vector_size(opt)
+
+        if opt.use_vae:
+            # In case of VAE, we will sample from random z vector
+            self.fc = nn.Linear(opt.z_dim, 16 * nf * self.sw * self.sh)
+        else:
+            # Otherwise, we make the network deterministic by starting with
+            # downsampled segmentation map instead of random z
+            self.fc = ConvLayer(self.opt.label_nc, 16 * nf, 3, padding=1)
+        self.netL = LadderNet(nf)
+        self.head_0 = SPADEResnetBlock(16 * nf, 16 * nf, opt)
+
+        self.G_middle_0 = SPADEResnetBlock(16 * nf, 16 * nf, opt)
+        self.G_middle_1 = SPADEResnetBlock(16 * nf, 16 * nf, opt)
+
+        self.up_0 = SPADEResnetBlock(16 * nf, 8 * nf, opt)
+        self.up_1 = SPADEResnetBlock(8 * nf, 4 * nf, opt)
+        self.up_2 = SPADEResnetBlock(4 * nf, 2 * nf, opt)
+        self.up_3 = SPADEResnetBlock(2 * nf, 1 * nf, opt)
+
+        final_nc = nf
+
+        if opt.num_upsampling_layers == 'most':
+            self.up_4 = SPADEResnetBlock(1 * nf, nf // 2, opt)
+            final_nc = nf // 2
+
+        self.conv_img = ConvLayer(final_nc, 3, 3, padding=1)
+
+        self.up = nn.Upsample(scale_factor=2)
+
+    def compute_latent_vector_size(self, opt):
+        if opt.num_upsampling_layers == 'normal':
+            num_up_layers = 5
+        elif opt.num_upsampling_layers == 'more':
+            num_up_layers = 6
+        elif opt.num_upsampling_layers == 'most':
+            num_up_layers = 7
+        else:
+            raise ValueError('opt.num_upsampling_layers [%s] not recognized' %
+                             opt.num_upsampling_layers)
+
+        sw = opt.crop_size // (2**num_up_layers)
+        sh = round(sw / opt.aspect_ratio)
+
+        return sw, sh
+
+    def forward(self, input, z=None):
+        seg = self.netL(input)
+
+        if self.opt.use_vae:
+            # we sample z from unit normal and reshape the tensor
+            if z is None:
+                z = torch.randn(input.size(0), self.opt.z_dim,
+                                dtype=torch.float32, device=input.get_device())
+            x = self.fc(z)
+            x = x.view(-1, 16 * self.opt.ngf, self.sh, self.sw)
+        else:
+            # we downsample segmap and run convolution
+            x = F.interpolate(input, size=(self.sh, self.sw))
+            x = self.fc(x)
+
+        x = self.head_0(x, seg[-1])     # 1024, 8, 8 : 256, 256
+
+        x = self.up(x)
+        x = self.G_middle_0(x, seg[-2])     # 1024, 16, 16
+
+        if self.opt.num_upsampling_layers == 'more' or \
+           self.opt.num_upsampling_layers == 'most':
+            x = self.up(x)
+
+        x = self.G_middle_1(x, seg[-3])     # 1024, 16, 16
+
+        x = self.up(x)
+        x = self.up_0(x, seg[-4])   # 1024, 32, 32
+        x = self.up(x)
+        x = self.up_1(x, seg[-5])   # 512, 64, 64
+        x = self.up(x)
+        x = self.up_2(x, seg[-6])   # 256, 128, 128
+        x = self.up(x)
+        x = self.up_3(x, seg[-7])   # 128, 256, 256
+
+        if self.opt.num_upsampling_layers == 'most':
+            x = self.up(x)
+            x = self.up_4(x, seg[-7])
+
+        x = self.conv_img(F.leaky_relu(x, 2e-1))
+        x = F.tanh(x)
+
+        return x

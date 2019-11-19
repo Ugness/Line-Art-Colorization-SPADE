@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import torchvision
 import torch.nn.utils.spectral_norm as spectral_norm
 from models.networks.normalization import SPADE
+from models.networks.sync_batchnorm import SynchronizedBatchNorm2d
 from models.networks.reflect_conv import Conv2d
 
 ConvLayer = Conv2d
@@ -123,3 +124,61 @@ class VGG19(torch.nn.Module):
         h_relu5 = self.slice5(h_relu4)
         out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
         return out
+
+
+class BooruNet(torch.nn.Module):
+    def __init__(self, requires_grad=False):
+        super().__init__()
+        model = torch.hub.load('RF5/danbooru-pretrained', 'resnet18')[0]
+        self.slice1 = model[:4]
+        self.slice2 = model[4]
+        self.slice3 = model[5]
+        self.slice4 = model[6]
+        self.slice5 = model[7]
+        if not requires_grad:
+            for param in self.parameters():
+                param.requires_grad = False
+
+    def forward(self, X):
+        h_relu1 = self.slice1(X)
+        h_relu2 = self.slice2(h_relu1)
+        h_relu3 = self.slice3(h_relu2)
+        h_relu4 = self.slice4(h_relu3)
+        h_relu5 = self.slice5(h_relu4)
+        out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
+        return out
+
+
+class LadderNet(torch.nn.Module):
+    def __init__(self, nf):
+        super().__init__()
+        def convlayer(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=False):
+            return nn.Sequential(
+                SynchronizedBatchNorm2d(in_channels),
+                Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias),
+                nn.LeakyReLU(0.2)
+            )
+        def basicblock(in_channels, out_channels, kernel_size=3, bias=False):
+            return nn.Sequential(
+                convlayer(in_channels, out_channels, kernel_size, stride=2, padding=1, bias=bias),
+                convlayer(out_channels, out_channels, kernel_size, stride=1, padding=1, bias=bias)
+            )
+        self.base = convlayer(5, nf, 3, 1, 1)   # output H: 256
+        self.down_3 = convlayer(nf, nf, 3, 1, 1)  # 256
+        self.down_2 = convlayer(nf, nf, 3, 2, 1)    # 128
+        self.down_1 = convlayer(nf, nf, 3, 2, 1)    # 64
+        self.down_0 = convlayer(nf, nf, 3, 2, 1)   # 32
+        self.L_middle_1 = convlayer(nf, nf, 3, 2, 1)  # 16
+        self.L_middle_0 = convlayer(nf, nf, 3, 1, 1)  # 16
+        self.head_0 = convlayer(nf, nf, 3, 2, 1)    # 8
+
+    def forward(self, x):
+        x = self.base(x)
+        down_3 = self.down_3(x)
+        down_2 = self.down_2(down_3)
+        down_1 = self.down_1(down_2)
+        down_0 = self.down_0(down_1)
+        L_middle_1 = self.L_middle_1(down_0)
+        L_middle_0 = self.L_middle_0(L_middle_1)
+        head_0 = self.head_0(L_middle_0)
+        return down_3, down_2, down_1, down_0, L_middle_1, L_middle_0, head_0

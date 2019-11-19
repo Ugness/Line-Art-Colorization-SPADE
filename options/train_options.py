@@ -27,21 +27,35 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--beta1', type=float, default=0.0, help='momentum term of adam')
         parser.add_argument('--beta2', type=float, default=0.9, help='momentum term of adam')
         parser.add_argument('--no_TTUR', action='store_true', help='Use TTUR training scheme')
+        parser.add_argument('--SGDR', action='store_true', help='Use CosineAnnealingLR with warmup')
+        parser.add_argument('--hsv_aug', type=float, default=0, help='Use HSV Augmentation')
 
         # the default values for beta1 and beta2 differ by TTUR option
         opt, _ = parser.parse_known_args()
         if opt.no_TTUR:
             parser.set_defaults(beta1=0.5, beta2=0.999)
 
-        parser.add_argument('--lr', type=float, default=0.0002, help='initial learning rate for adam')
+        parser.add_argument('--lr', type=float, default=0.001, help='initial learning rate for adam')
         parser.add_argument('--D_steps_per_G', type=int, default=1, help='number of discriminator iterations per generator iterations.')
 
         # for discriminators
         parser.add_argument('--ndf', type=int, default=64, help='# of discrim filters in first conv layer')
         parser.add_argument('--lambda_feat', type=float, default=10.0, help='weight for feature matching loss')
         parser.add_argument('--lambda_vgg', type=float, default=10.0, help='weight for vgg loss')
+        parser.add_argument('--lambda_booru', type=float, default=10.0, help='weight for vgg loss')
+        parser.add_argument('--lambda_l1', type=float, default=10.0, help='weight for L1 loss')
+        parser.add_argument('--lambda_l2', type=float, default=10.0, help='weight for L2 loss')
+        parser.add_argument('--lambda_tv', type=float, default=10.0, help='weight for TV loss')
+        parser.add_argument('--lambda_sv', type=float, default=1.0, help='weight for SV loss')
         parser.add_argument('--no_ganFeat_loss', action='store_true', help='if specified, do *not* use discriminator feature matching loss')
         parser.add_argument('--no_vgg_loss', action='store_true', help='if specified, do *not* use VGG feature matching loss')
+        parser.add_argument('--no_GAN', action='store_true', help='if specified, do *not* use GAN loss')
+        parser.add_argument('--booru_loss', action='store_true', help='if specified, use BooruNet feature matching loss')
+        parser.add_argument('--L2_loss', action='store_true', help='if specified, use L2 matching loss')
+        parser.add_argument('--L1_loss', action='store_true', help='if specified, use L1 matching loss')
+        parser.add_argument('--hsv_tv', action='store_true', help='if specified, use Total variation loss')
+        parser.add_argument('--high_sv', action='store_true', help='if specified, use High SV loss')
+        parser.add_argument('--radam', action='store_true', help='if specified, use RAdam')
         parser.add_argument('--gan_mode', type=str, default='hinge', help='(ls|original|hinge)')
         parser.add_argument('--netD', type=str, default='multiscale', help='(n_layers|multiscale|image)')
         parser.add_argument('--lambda_kld', type=float, default=0.05)

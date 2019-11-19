@@ -66,6 +66,7 @@ class BaseOptions():
         # parser.add_argument('--no_instance', action='store_true', help='if specified, do *not* add instance map as input')
         parser.add_argument('--nef', type=int, default=16, help='# of encoder filters in the first conv layer')
         parser.add_argument('--use_vae', action='store_true', help='enable training with an image encoder.')
+        parser.add_argument('--use_F', action='store_true')
 
         self.initialized = True
         return parser
@@ -157,10 +158,9 @@ class BaseOptions():
 
         # Set semantic_nc based on the option.
         # This will be convenient in many places
-        opt.semantic_nc = opt.label_nc
-            # +
-            # (1 if opt.contain_dontcare_label else 0) + \
-            # (0 if opt.no_instance else 1)
+        opt.semantic_nc = opt.ngf
+        # if opt.use_F:
+        #     opt.semantic_nc += 128
 
         # set gpu ids
         str_ids = opt.gpu_ids.split(',')

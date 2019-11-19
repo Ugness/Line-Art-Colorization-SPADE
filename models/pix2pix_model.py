@@ -4,8 +4,10 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 """
 
 import torch
+import torch.nn.functional as F
 import models.networks as networks
 import util.util as util
+from util.optimizer import RAdam
 
 
 class Pix2PixModel(torch.nn.Module):
@@ -22,7 +24,7 @@ class Pix2PixModel(torch.nn.Module):
         self.ByteTensor = torch.cuda.ByteTensor if self.use_gpu() \
             else torch.ByteTensor
 
-        self.netG, self.netD, self.netE = self.initialize_networks(opt)
+        self.netG, self.netD, self.netE, self.netF = self.initialize_networks(opt)
 
         # set loss functions
         if opt.isTrain:
@@ -31,15 +33,25 @@ class Pix2PixModel(torch.nn.Module):
             self.criterionFeat = torch.nn.L1Loss()
             if not opt.no_vgg_loss:
                 self.criterionVGG = networks.VGGLoss(self.opt.gpu_ids)
+            if opt.booru_loss and opt.no_vgg_loss:
+                self.criterionBooru = networks.BooruLoss(self.opt.gpu_ids)
             if opt.use_vae:
                 self.KLDLoss = networks.KLDLoss()
+            if opt.L2_loss:
+                self.L2Loss = torch.nn.MSELoss()
+            if opt.L1_loss:
+                self.L1Loss = torch.nn.L1Loss()
+            if self.opt.hsv_tv:
+                self.hsvTVLoss = networks.HSVTVLoss()
+            if self.opt.high_sv:
+                self.HighSVLoss = networks.HighSVLoss()
 
     # Entry point for all calls involving forward pass
     # of deep networks. We used this approach since DataParallel module
     # can't parallelize custom functions, we branch to different
     # routines based on |mode|.
     def forward(self, data, mode):
-        input_semantics, real_image = self.preprocess_input(data)
+        input_semantics, real_image = self.preprocess_input(data)   # in_sec ->sketch+hint, real_image -> color
 
         if mode == 'generator':
             g_loss, generated = self.compute_generator_loss(
@@ -63,6 +75,8 @@ class Pix2PixModel(torch.nn.Module):
         G_params = list(self.netG.parameters())
         if opt.use_vae:
             G_params += list(self.netE.parameters())
+        if opt.use_F:
+            G_params += list(self.netF.parameters())
         if opt.isTrain:
             D_params = list(self.netD.parameters())
 
@@ -74,14 +88,21 @@ class Pix2PixModel(torch.nn.Module):
 
         optimizer_G = torch.optim.Adam(G_params, lr=G_lr, betas=(beta1, beta2))
         optimizer_D = torch.optim.Adam(D_params, lr=D_lr, betas=(beta1, beta2))
+        if opt.radam:
+            optimizer_G = RAdam(G_params, lr=G_lr, betas=(beta1, beta2))
+            optimizer_D = RAdam(D_params, lr=D_lr, betas=(beta1, beta2))
+        if opt.SGDR:
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer_G, 1, T_mult=8)
 
-        return optimizer_G, optimizer_D
+        return optimizer_G, optimizer_D,scheduler
 
     def save(self, epoch):
         util.save_network(self.netG, 'G', epoch, self.opt)
         util.save_network(self.netD, 'D', epoch, self.opt)
         if self.opt.use_vae:
             util.save_network(self.netE, 'E', epoch, self.opt)
+        if self.opt.use_F:
+            util.save_network(self.netF, 'F', epoch, self.opt)
 
     ############################################################################
     # Private helper methods
@@ -91,6 +112,7 @@ class Pix2PixModel(torch.nn.Module):
         netG = networks.define_G(opt)
         netD = networks.define_D(opt) if opt.isTrain else None
         netE = networks.define_E(opt) if opt.use_vae else None
+        netF = networks.define_F(opt) if opt.use_F else None
 
         if not opt.isTrain or opt.continue_train:
             netG = util.load_network(netG, 'G', opt.which_epoch, opt)
@@ -98,8 +120,9 @@ class Pix2PixModel(torch.nn.Module):
                 netD = util.load_network(netD, 'D', opt.which_epoch, opt)
             if opt.use_vae:
                 netE = util.load_network(netE, 'E', opt.which_epoch, opt)
-
-        return netG, netD, netE
+            if opt.use_F:
+                netF = util.load_network(netF, 'F', opt.which_epoch, opt)
+        return netG, netD, netE, netF
 
     # preprocess the input, such as moving the tensors to GPUs and
     # transforming the label map to one-hot encoding
@@ -117,8 +140,11 @@ class Pix2PixModel(torch.nn.Module):
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
-        # 5-channel semantic map
+        # 5+128-channel semantic map
         input_semantics = torch.cat((data['image'], data['instance']), dim=1)
+        if self.opt.use_F:
+            sketch_feature = F.interpolate(self.netF(input_semantics), size=data['image'].size(3), mode='bilinear')
+            input_semantics = torch.cat((input_semantics, sketch_feature), dim=1)
 
         # # create one-hot label map
         # label_map = data['label']
@@ -147,9 +173,9 @@ class Pix2PixModel(torch.nn.Module):
 
         pred_fake, pred_real = self.discriminate(
             input_semantics, fake_image, real_image)
-
-        G_losses['GAN'] = self.criterionGAN(pred_fake, True,
-                                            for_discriminator=False)
+        if not self.opt.no_GAN:
+            G_losses['GAN'] = self.criterionGAN(pred_fake, True,
+                                                for_discriminator=False)
 
         if not self.opt.no_ganFeat_loss:
             num_D = len(pred_fake)
@@ -166,6 +192,21 @@ class Pix2PixModel(torch.nn.Module):
         if not self.opt.no_vgg_loss:
             G_losses['VGG'] = self.criterionVGG(fake_image, real_image) \
                 * self.opt.lambda_vgg
+        if self.opt.booru_loss and self.opt.no_vgg_loss:
+            G_losses['Booru'] = self.criterionBooru(fake_image, real_image) \
+                * self.opt.lambda_vgg
+        if self.opt.L2_loss:
+            G_losses['L2'] = self.L2Loss(fake_image, real_image) \
+                                * self.opt.lambda_l1
+        if self.opt.L1_loss:
+            G_losses['L1'] = self.L1Loss(fake_image, real_image) \
+                                * self.opt.lambda_l2
+        if self.opt.hsv_tv:
+            G_losses['HSV_TV'] = self.hsvTVLoss(fake_image, input_semantics[:, [0, ], :, :]) \
+                                * self.opt.lambda_tv
+        if self.opt.high_sv:
+            G_losses['High_SV'] = self.HighSVLoss(fake_image, input_semantics[:, [0, ], :, :]) \
+                                * self.opt.lambda_sv
 
         return G_losses, fake_image
 
@@ -175,6 +216,10 @@ class Pix2PixModel(torch.nn.Module):
             fake_image, _ = self.generate_fake(input_semantics, real_image)
             fake_image = fake_image.detach()
             fake_image.requires_grad_()
+
+        if self.opt.use_F:
+            input_semantics = input_semantics.detach()
+
 
         pred_fake, pred_real = self.discriminate(
             input_semantics, fake_image, real_image)
@@ -210,8 +255,8 @@ class Pix2PixModel(torch.nn.Module):
     # for each fake and real image.
 
     def discriminate(self, input_semantics, fake_image, real_image):
-        fake_concat = torch.cat([input_semantics, fake_image], dim=1)
-        real_concat = torch.cat([input_semantics, real_image], dim=1)
+        fake_concat = torch.cat([input_semantics[:, :5], fake_image], dim=1)
+        real_concat = torch.cat([input_semantics[:, :5], real_image], dim=1)
 
         # In Batch Normalization, the fake and real images are
         # recommended to be in the same batch to avoid disparate
