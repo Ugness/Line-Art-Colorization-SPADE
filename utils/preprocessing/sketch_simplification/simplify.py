@@ -14,7 +14,10 @@ parser.add_argument('--out', type=str, default='output', help='Directory to save
 opt = parser.parse_args()
 
 use_cuda = torch.cuda.device_count() > 0
-
+if use_cuda:
+    device = "cuda:0"
+else:
+    device = "cpu"
 model = nn.Sequential(  # Sequential,
     nn.Conv2d(1, 48, (5, 5), (2, 2), (2, 2)),
     nn.ReLU(),
@@ -91,7 +94,7 @@ for img_name in os.listdir(img_dir):
     w, h = data.size[0], data.size[1]
     pw = 8 - (w % 8) if w % 8 != 0 else 0
     ph = 8 - (h % 8) if h % 8 != 0 else 0
-    data = ((transforms.ToTensor()(data) - immean) / imstd).unsqueeze(0).to(model.device)
+    data = ((transforms.ToTensor()(data) - immean) / imstd).unsqueeze(0).to(device)
     with torch.no_grad():
         if pw != 0 or ph != 0:
             data = torch.nn.ReplicationPad2d((0, pw, 0, ph))(data).data
