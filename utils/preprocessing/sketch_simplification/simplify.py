@@ -83,8 +83,8 @@ if not os.path.exists(out_dir):
 it = 0
 for img_name in tqdm(os.listdir(img_dir)):
     it += 1
-    if it % 100 == 0:
-        print(f"[{it:04d}]{img_name} {datetime.datetime.now()}")
+    # if it % 100 == 0:
+    #     print(f"[{it:04d}]{img_name} {datetime.datetime.now()}")
 
     try:
         img_path = os.path.join(img_dir, img_name)
