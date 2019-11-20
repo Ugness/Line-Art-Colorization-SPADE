@@ -4,10 +4,12 @@ from time import gmtime, strftime
 
 app = Flask(__name__)
 
+
 @app.route("/")
 def index():
     return render_template('test.html')
 
+  
 @app.route("/colorization/", methods=['POST'])
 def sum():
     rgba = request.form.get("rgba")
