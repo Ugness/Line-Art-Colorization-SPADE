@@ -97,9 +97,9 @@ for img_name in os.listdir(img_dir):
             data = torch.nn.ReplicationPad2d((0, pw, 0, ph))(data).data.to(model.device)
             pred = model.forward(data)
 
-    convert2img = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(512)
-    ])
-    out_path = os.path.join(out_dir, img_name)
-    convert2img(pred[0].cpu()).save(out_path)
+        convert2img = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(512)
+        ])
+        out_path = os.path.join(out_dir, img_name)
+        convert2img(pred[0].cpu()).save(out_path)
