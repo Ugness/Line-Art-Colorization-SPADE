@@ -10,11 +10,15 @@ let canvas, ctx,
     },
     strokes = [],
     strokesFromOther = [],
-    currentStroke = null;
+    currentStroke = null,
+    lineart = null;
 
 function redraw () {
     ctx.clearRect(0, 0, canvas[0].width, canvas[0].height);
     ctx.lineCap = 'round';
+    if(lineart != null) {
+        ctx.drawImage(lineart, 0, 0);
+    }
     for (var i = 0; i < strokes.length; i++) {
         var s = strokes[i];
         ctx.strokeStyle = s.color;
@@ -152,6 +156,44 @@ function init () {
         brush.size = this.value;
     });
 
+    $('#col-btn').click(function(){
+        $.ajax({
+            url: '/colorization/',
+            data: {
+                    'rgba': canvas[0].toDataURL(),
+                    'width': canvas.width(),
+                    'height': canvas.height()},
+            method: 'POST',
+            success: function(data) {
+                var img = new Image;
+                img.src = data['output'];
+                ctx.drawImage(img,0,0);
+            }
+        });
+    });
 }
 
+function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+        var reader = new FileReader();
+
+      // Closure to capture the file information.
+      reader.onload = (function(theFile) {
+          return function(e) {
+              console.log(e.target.result);
+              lineart = new Image;
+              lineart.src = e.target.result;
+              redraw();
+          };
+      })(f);
+
+      // Read in the image file as a data URL.
+      reader.readAsDataURL(f);
+    }
+  }
+
 $(init);
+document.getElementById('files').addEventListener('change', handleFileSelect, false);
