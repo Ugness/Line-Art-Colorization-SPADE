@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>Draw</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }} ">
         <link rel="shortcut icon" href="">
     </head>
     <body>
@@ -16,12 +16,23 @@
             <input type="range" id="brush-size" min="1" max="50" value="10">
         </div>
 
-        <canvas id="draw" width="256" height="256"></canvas>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-        <script src="{{ url_for('static', filename='js/draw.js') }}"></script>
+        <div class = "split left">
+            <div class = "container">
+                <div class="btn_group">
+                    <button autofocus class="switch-button" id="toSketch">SKETCH</button>
+                    <button class="switch-button" id="toHint">HINT</button>
+                </div>
+                <canvas class="draw" id="sketch"></canvas>
+                <canvas class="draw" id="hint"></canvas>
+            </div>
+        </div>
 
-        <div class="right-box">
-            picture comes here
+        <div class="split right">
+            <div class="centered">
+                <p>picture comes here!!</p>
+            </div>
         </div>
     </body>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/draw.js') }}"></script>
 </html>
