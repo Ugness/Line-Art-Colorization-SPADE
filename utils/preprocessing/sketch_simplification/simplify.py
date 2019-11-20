@@ -91,10 +91,10 @@ for img_name in os.listdir(img_dir):
     w, h = data.size[0], data.size[1]
     pw = 8 - (w % 8) if w % 8 != 0 else 0
     ph = 8 - (h % 8) if h % 8 != 0 else 0
-    data = ((transforms.ToTensor()(data) - immean) / imstd).unsqueeze(0)
+    data = ((transforms.ToTensor()(data) - immean) / imstd).unsqueeze(0).to(model.device)
     with torch.no_grad():
         if pw != 0 or ph != 0:
-            data = torch.nn.ReplicationPad2d((0, pw, 0, ph))(data).data.to(model.device)
+            data = torch.nn.ReplicationPad2d((0, pw, 0, ph))(data).data
         pred = model.forward(data)
 
         convert2img = transforms.Compose([
