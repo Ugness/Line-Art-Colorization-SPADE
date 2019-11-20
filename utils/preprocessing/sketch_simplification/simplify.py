@@ -95,7 +95,7 @@ for img_name in os.listdir(img_dir):
     with torch.no_grad():
         if pw != 0 or ph != 0:
             data = torch.nn.ReplicationPad2d((0, pw, 0, ph))(data).data.to(model.device)
-            pred = model.forward(data)
+        pred = model.forward(data)
 
         convert2img = transforms.Compose([
             transforms.ToPILImage(),
