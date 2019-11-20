@@ -7,6 +7,7 @@ import argparse
 import os
 import sys
 import datetime
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='Sketch simplification demo.')
 parser.add_argument('--img', type=str, default='input', help='Directory containing input image files.')
@@ -80,7 +81,7 @@ if not os.path.exists(out_dir):
     os.makedirs(out_dir, exist_ok=True)
 
 it = 0
-for img_name in os.listdir(img_dir):
+for img_name in tqdm(os.listdir(img_dir)):
     it += 1
     if it % 100 == 0:
         print(f"[{it:04d}]{img_name} {datetime.datetime.now()}")
