@@ -8,11 +8,15 @@ var canvas, ctx,
         down: false,
     },
     strokes = [],
-    currentStroke = null;
+    currentStroke = null,
+    lineart = null;
 
 function redraw () {
     ctx.clearRect(0, 0, canvas.width(), canvas.height());
     ctx.lineCap = 'round';
+    if(lineart != null) {
+        ctx.drawImage(lineart, 0, 0);
+    }
     for (var i = 0; i < strokes.length; i++) {
         var s = strokes[i];
         ctx.strokeStyle = s.color;
@@ -109,4 +113,27 @@ function init () {
     });
 }
 
+function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+        var reader = new FileReader();
+
+      // Closure to capture the file information.
+      reader.onload = (function(theFile) {
+          return function(e) {
+              console.log(e.target.result);
+              lineart = new Image;
+              lineart.src = e.target.result;
+              redraw();
+          };
+      })(f);
+
+      // Read in the image file as a data URL.
+      reader.readAsDataURL(f);
+    }
+  }
+
 $(init);
+document.getElementById('files').addEventListener('change', handleFileSelect, false);
