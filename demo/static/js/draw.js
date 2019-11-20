@@ -91,6 +91,22 @@ function init () {
     $('#brush-size').on('input', function () {
         brush.size = this.value;
     });
+
+    $('#col-btn').click(function(){
+        $.ajax({
+            url: '/colorization/',
+            data: {
+                    'rgba': canvas[0].toDataURL(),
+                    'width': canvas.width(),
+                    'height': canvas.height()},
+            method: 'POST',
+            success: function(data) {
+                var img = new Image;
+                img.src = data['output'];
+                ctx.drawImage(img,0,0);
+            }
+        });
+    });
 }
 
 $(init);
