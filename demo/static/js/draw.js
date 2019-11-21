@@ -221,7 +221,7 @@ function init () {
 
                 let w = canvasArray[0].canvas[0].width;
                 canvasArray[0].strokes = [];
-                redraw()
+                redraw();
             }
         });
     });
@@ -236,7 +236,6 @@ function handleFileSelect(evt) {
       // Closure to capture the file information.
       reader.onload = (function() {
           return function(e) {
-              console.log(e.target.result);
               sketchImage = new Image;
               sketchImage.src = e.target.result;
               sketchImage.onload = redraw;
