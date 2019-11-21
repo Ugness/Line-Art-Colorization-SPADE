@@ -8,6 +8,9 @@ let canvas, ctx,
         size: 10,
         down: false,
     },
+    z_vector = {
+        value: 0.0,
+    },
     strokes = [],
     strokesFromOther = [],
     currentStroke = null,
@@ -156,13 +159,34 @@ function init () {
         brush.size = this.value;
     });
 
+    $('#z-vector').on('input', function(){
+        z_vector.value = this.value;
+    });
+
     $('#col-btn').click(function(){
         $.ajax({
             url: '/colorization/',
             data: {
                     'rgba': canvas[0].toDataURL(),
-                    'width': canvas.width(),
-                    'height': canvas.height()},
+                    'width': canvas[0].width,
+                    'height': canvas[0].height,
+                    'z': z_vector.value},
+            method: 'POST',
+            success: function(data) {
+                var img = new Image;
+                img.src = data['output'];
+                ctx.drawImage(img,0,0);
+            }
+        });
+    });
+
+    $('#sim-btn').click(function(){
+        $.ajax({
+            url: '/simplification/',
+            data: {
+                    'line': canvas[0].toDataURL(),
+                    'width': canvas[0].width,
+                    'height': canvas[0].height},
             method: 'POST',
             success: function(data) {
                 var img = new Image;

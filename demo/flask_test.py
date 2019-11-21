@@ -15,6 +15,7 @@ def sum():
     rgba = request.form.get("rgba")
     width = int(float(request.form.get("width")))
     height = int(float(request.form.get("height")))
+    z = float(request.form.get("z"))
 
     imgdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
@@ -26,6 +27,33 @@ def sum():
         f.close()
 
     #f_name = './data/output/output_'+ timestamp +'.png'
+
+    #for test
+    f_name = 'test.png'
+    with open(f_name, 'rb') as f:
+        output = base64.b64encode(f.read()).decode("utf-8")
+        f.close()
+
+    data = {'output': prefix+","+output}
+    data = jsonify(data)
+    return data
+
+@app.route("/simplification/", methods=['POST'])
+def simplification():
+    line = request.form.get("line")
+    width = int(float(request.form.get("width")))
+    height = int(float(request.form.get("height")))
+
+    imgdata = base64.b64decode(line.split(',')[1])
+    prefix = line.split(',')[0]
+    timestamp = strftime("%Y%m%d%H%M%S", gmtime())
+
+    f_name = './data/line/line_'+ timestamp +'.png'
+    with open(f_name, 'wb') as f:
+        f.write(imgdata)
+        f.close()
+
+    #f_name = './data/simplified/simplified_'+ timestamp +'.png'
 
     #for test
     f_name = 'test.png'
