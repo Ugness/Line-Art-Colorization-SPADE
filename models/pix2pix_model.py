@@ -146,20 +146,6 @@ class Pix2PixModel(torch.nn.Module):
             sketch_feature = F.interpolate(self.netF(input_semantics), size=data['image'].size(3), mode='bilinear')
             input_semantics = torch.cat((input_semantics, sketch_feature), dim=1)
 
-        # # create one-hot label map
-        # label_map = data['label']
-        # bs, _, h, w = label_map.size()
-        # nc = self.opt.label_nc + 1 if self.opt.contain_dontcare_label \
-        #     else self.opt.label_nc
-        # input_label = self.FloatTensor(bs, nc, h, w).zero_()
-        # input_semantics = input_label.scatter_(1, label_map, 1.0)
-
-        # # concatenate instance map if it exists
-        # if not self.opt.no_instance:
-        #     inst_map = data['instance']
-        #     instance_edge_map = self.get_edges(inst_map)
-        #     input_semantics = torch.cat((input_semantics, instance_edge_map), dim=1)
-
         return input_semantics, data['label']
 
     def compute_generator_loss(self, input_semantics, real_image):
@@ -301,3 +287,13 @@ class Pix2PixModel(torch.nn.Module):
 
     def use_gpu(self):
         return len(self.opt.gpu_ids) > 0
+
+    def inference(self, x, shift):
+        z = torch.randn([1, self.opt.z_dim])
+        z = z + shift
+        if self.opt.cuda:
+            z = z.cuda()
+
+        fake_image = self.netG(x.float(), z=z.float())
+
+        return fake_image
