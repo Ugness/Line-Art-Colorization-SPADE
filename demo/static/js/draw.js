@@ -120,7 +120,7 @@ function init () {
 
     $('#save-btn').click(function () {
         var element = document.createElement('a');
-        element.href = canvasArray[0].canvas.toDataURL();
+        element.href = $('#result')[0].toDataURL();
         element.download = "result.png";
         element.style.display='none';
         document.body.appendChild(element);
