@@ -21,7 +21,7 @@ function redraw () {
         let strokes = canvasArray[c].strokes;
 
         ctx.clearRect(0, 0, w, w);
-        ctx.lineCap = 'round';
+        ctx.lineCap = 'square';
         if (sketchImage != null && c === 0) {
             console.log("sketch loaded?");
             ctx.drawImage(sketchImage, 0, 0, sketchImage.width, sketchImage.height,
