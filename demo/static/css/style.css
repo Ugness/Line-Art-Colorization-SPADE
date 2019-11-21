@@ -61,7 +61,7 @@ body {
 }
 
 .switch-button {
-    background-color: #0070d0;;
+    background-color: #555555;
     text-decoration: none;
     color: #ffffff;
     line-height: 3em;
@@ -79,17 +79,23 @@ body {
 }
 
 .draw {
-    margin-top: 2vh;
+    margin-top: 2em;
     width: 80%;
     outline: solid;
     display: block;
     position: absolute;
+    background-color: transparent;
 }
 
 #sketch {
-    z-index: 3;
+    z-index: 2;
 }
 
 #hint {
-    z-index: 2;
+    z-index: 3;
+    pointer-events: none;
+}
+
+#result {
+    margin-top: 5em;
 }

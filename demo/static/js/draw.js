@@ -1,6 +1,6 @@
-
-let canvas, ctx,
-    isCanvasSketch = true,
+const canvasCount = 2;
+let canvasArray = Array(canvasCount),
+    currentCanvas = {Value: 0},
     brush = {
         x: 0,
         y: 0,
@@ -11,46 +11,69 @@ let canvas, ctx,
     z_vector = {
         value: 0.0,
     },
-    strokes = [],
-    strokesFromOther = [],
     currentStroke = null,
-    lineart = null;
+    sketchImage = null;
 
 function redraw () {
-    ctx.clearRect(0, 0, canvas[0].width, canvas[0].height);
-    ctx.lineCap = 'round';
-    if(lineart != null) {
-        ctx.drawImage(lineart, 0, 0);
-    }
-    for (var i = 0; i < strokes.length; i++) {
-        var s = strokes[i];
-        ctx.strokeStyle = s.color;
-        ctx.lineWidth = s.size;
-        ctx.beginPath();
-        ctx.moveTo(s.points[0].x, s.points[0].y);
-        for (var j = 0; j < s.points.length; j++) {
-            var p = s.points[j];
-            ctx.lineTo(p.x, p.y);
+    for (let c = 0 ; c < canvasCount ; c++) {
+        let ctx = canvasArray[c].ctx;
+        let w = canvasArray[c].canvas[0].width;
+        let strokes = canvasArray[c].strokes;
+
+        ctx.clearRect(0, 0, w, w);
+        ctx.lineCap = 'round';
+        if (sketchImage != null && c === 0) {
+            console.log("sketch loaded?");
+            ctx.drawImage(sketchImage, 0, 0, sketchImage.width, sketchImage.height,
+                                        0, 0, w, w);
         }
-        ctx.stroke();
+
+        for (let i = 0; i < strokes.length; i++) {
+            let s = strokes[i];
+            ctx.strokeStyle = s.color;
+            ctx.lineWidth = s.size;
+            ctx.beginPath();
+            ctx.moveTo(s.points[0].x, s.points[0].y);
+            for (let j = 0; j < s.points.length; j++) {
+                let p = s.points[j];
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.stroke();
+        }
     }
 }
 
 function init () {
-    $('#hint').attr({
+    canvasArray[0] = {
+        canvas: $('#sketch'),
+        ctx: null,
+        strokes: [],
+    };
+    canvasArray[0].canvas.attr({
         width: innerWidth < innerHeight ? innerWidth : innerHeight,
         height: innerWidth < innerHeight ? innerWidth : innerHeight,
     });
+    canvasArray[0].ctx = canvasArray[0].canvas[0].getContext('2d');
 
-    canvas = $('#sketch');
-    canvas.attr({
+    canvasArray[1] = {
+        canvas: $('#hint'),
+        ctx: null,
+        strokes: [],
+    };
+    canvasArray[1].canvas.attr({
         width: innerWidth < innerHeight ? innerWidth : innerHeight,
         height: innerWidth < innerHeight ? innerWidth : innerHeight,
     });
+    canvasArray[1].ctx = canvasArray[1].canvas[0].getContext('2d');
 
-    ctx = canvas[0].getContext('2d');
+    $('#result').attr({
+        width: innerWidth < innerHeight ? innerWidth : innerHeight,
+        height: innerWidth < innerHeight ? innerWidth : innerHeight,
+    });
 
     function mouseEvent (e) {
+        let canvas = canvasArray[currentCanvas.Value].canvas;
+
         let rect = canvas[0].getBoundingClientRect(),
             scaleX = canvas[0].width / rect.width,
             scaleY = canvas[0].height / rect.height;
@@ -65,28 +88,31 @@ function init () {
         redraw();
     }
     function mouseDown (e) {
+        console.log(currentCanvas.Value);
         brush.down = true;
         currentStroke = {
             color: brush.color,
             size: brush.size,
             points: [],
         };
-        strokes.push(currentStroke);
+        console.log("stroke added to %d\n", currentCanvas.Value);
+        canvasArray[currentCanvas.Value].strokes.push(currentStroke);
         mouseEvent(e);
     }
     function mouseUp (e) {
         brush.down = false;
-        mouseEvent(e);
+        if (currentCanvas.Value === 0)
+            mouseEvent(e);
         currentStroke = null;
     }
     function mouseMove (e) {
-        if (brush.down)
+        if (brush.down && currentCanvas.Value === 0)
             mouseEvent(e);
     }
 
-    canvas.mousedown(mouseDown)
-        .mouseup(mouseUp)
-        .mousemove(mouseMove);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousedown", mouseDown);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("mouseup", mouseUp);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousemove", mouseMove);
 
     $('#load-btn').click(function(){
         $('#files').click();
@@ -94,7 +120,7 @@ function init () {
 
     $('#save-btn').click(function () {
         var element = document.createElement('a');
-        element.href = canvas[0].toDataURL();
+        element.href = canvasArray[0].canvas.toDataURL();
         element.download = "result.png";
         element.style.display='none';
         document.body.appendChild(element);
@@ -103,52 +129,40 @@ function init () {
     });
 
     $('#undo-btn').click(function () {
-        strokes.pop();
+        console.log("Undo: %d\n",currentCanvas.Value);
+        canvasArray[currentCanvas.Value].strokes.pop();
         redraw();
     });
 
     $('#clear-btn').click(function () {
-        strokes = [];
+        canvasArray[currentCanvas.Value].strokes = [];
+        if (currentCanvas.Value === 0) sketchImage = null;
         redraw();
     });
 
-    function switchCanvas(isTargetSketch) {
-        if (isTargetSketch === isCanvasSketch) {
-            return
-        }
+    function switchCanvas(targetCanvas) {
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("mousedown", mouseDown);
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("mouseup", mouseUp);
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("mousemove", mouseMove);
+        canvasArray[currentCanvas.Value].canvas[0].style.pointerEvents = "none";
 
-        canvas.css('zIndex', '2');
 
-        let nextCanvas;
-        if (isCanvasSketch) {
-            nextCanvas = $('#hint');
-        }
-        else {
-            nextCanvas = $('#sketch');
-        }
+        currentCanvas.Value = targetCanvas;
+        console.log(currentCanvas.Value);
 
-        canvas = nextCanvas;
-        isCanvasSketch = !isCanvasSketch;
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousedown", mouseDown);
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("mouseup", mouseUp);
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousemove", mouseMove);
+        canvasArray[currentCanvas.Value].canvas[0].style.pointerEvents = "auto";
 
-        canvas.css('zIndex', '3');
-        ctx = canvas[0].getContext('2d');
-
-        let temp = strokes;
-        strokes = strokesFromOther;
-        strokesFromOther = temp;
-
-        canvas.mousedown(mouseDown)
-            .mouseup(mouseUp)
-            .mousemove(mouseMove);
-
-        redraw()
+        redraw();
     }
 
     $('#toSketch').click(function () {
         $('#toHint').removeClass('selected');
         $('#toSketch').addClass('selected');
 
-        switchCanvas(true)
+        switchCanvas(0)
     });
 
     $('#toSketch').click();
@@ -157,7 +171,7 @@ function init () {
         $('#toSketch').removeClass('selected');
         $('#toHint').addClass('selected');
 
-        switchCanvas(false)
+        switchCanvas(1)
     });
 
     $('#color-picker').on('input', function () {
@@ -176,15 +190,15 @@ function init () {
         $.ajax({
             url: '/colorization/',
             data: {
-                    'rgba': canvas[0].toDataURL(),
-                    'width': canvas[0].width,
-                    'height': canvas[0].height,
+                    'rgba': canvasArray[0].canvas[0].toDataURL(),
+                    'width': canvasArray[0].canvas[0].width,
+                    'height': canvasArray[0].canvas[0].height,
                     'z': z_vector.value},
             method: 'POST',
             success: function(data) {
                 var img = new Image;
                 img.src = data['output'];
-                ctx.drawImage(img,0,0);
+                canvasArray[0].ctx.drawImage(img,0,0);
             }
         });
     });
@@ -193,14 +207,14 @@ function init () {
         $.ajax({
             url: '/simplification/',
             data: {
-                    'line': canvas[0].toDataURL(),
-                    'width': canvas[0].width,
-                    'height': canvas[0].height},
+                    'line': canvasArray[0].canvas[0].toDataURL(),
+                    'width': canvasArray[0].canvas[0].width,
+                    'height': canvasArray[0].canvas[0].height},
             method: 'POST',
             success: function(data) {
                 var img = new Image;
                 img.src = data['output'];
-                ctx.drawImage(img,0,0);
+                canvasArray[0].ctx.drawImage(img,0,0);
             }
         });
     });
@@ -214,12 +228,12 @@ function handleFileSelect(evt) {
         var reader = new FileReader();
 
       // Closure to capture the file information.
-      reader.onload = (function(theFile) {
+      reader.onload = (function() {
           return function(e) {
               console.log(e.target.result);
-              lineart = new Image;
-              lineart.src = e.target.result;
-              redraw();
+              sketchImage = new Image;
+              sketchImage.src = e.target.result;
+              sketchImage.onload = redraw;
           };
       })(f);
 
