@@ -8,8 +8,10 @@ from .base_options import BaseOptions
 
 class DemoOptions(BaseOptions):
     def initialize(self, parser):
+        self.isTrain = False
         BaseOptions.initialize(self, parser)
-        parser.set_defaults(netG='spadeladder', loadSize=256, use_vae=True, which_epoch='latest', name=None)
+        parser.set_defaults(netG='spadeladder', loadSize=256, use_vae=True, which_epoch='latest', name=None,
+                            continue_train=True)
         parser.set_defaults(dataset_mode='safebooru')
         parser.set_defaults(checkpoints_dir='../checkpoints')
         parser.add_argument('-s', '--simplification', type=str,
@@ -17,5 +19,4 @@ class DemoOptions(BaseOptions):
                             help='Directory of sketch simplification model')
         parser.add_argument('--port', type=int, default=41234, help="Server port number")
         parser.add_argument('--cuda', action='store_true')
-        self.isTrain = False
         return parser

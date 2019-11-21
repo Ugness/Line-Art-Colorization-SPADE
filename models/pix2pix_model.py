@@ -288,12 +288,12 @@ class Pix2PixModel(torch.nn.Module):
     def use_gpu(self):
         return len(self.opt.gpu_ids) > 0
 
-    def inference(self, x, shift):
-        z = torch.randn([1, self.opt.z_dim])
-        z = z + shift
-        if self.opt.cuda:
-            z = z.cuda()
+    def inference(self, x, real_image, shift):
+        z = None
+        KLD_loss = None
+        if self.opt.use_vae:
+            z, mu, logvar = self.encode_z(real_image)
 
-        fake_image = self.netG(x.float(), z=z.float())
+        fake_image = self.netG(x.float(), z)
 
         return fake_image

@@ -34,37 +34,41 @@ def sum():
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
-    f_name = './data/hint/hint_'+ timestamp +'.png'
-    with open(f_name, 'wb') as f:
+    hint_name = './data/hint/hint_'+ timestamp +'.png'
+    with open(hint_name, 'wb') as f:
         f.write(hintdata)
         f.close()
 
-    # line = request.form.get("line")
-    # linedata = base64.b64decode(line.split(',')[1])
-    # line = np.frombuffer(linedata, dtype=np.uint8)
-    line_path = '../../CS470_Project/data/safebooru/solo/line/original'
-    line_img = os.listdir(line_path)
-    line = cv2.imread(os.path.join(line_path, line_img[0]))
-    hint = cv2.imread(f_name, flags=cv2.IMREAD_UNCHANGED)
-    # print(line.shape, hint.shape)
-    print(hint.shape)
-    line = np.zeros([256, 256, 3])
-
+    line = request.form.get("line")
+    linedata = base64.b64decode(line.split(',')[1])
+    line_name = './data/line/line_' + timestamp + '.png'
+    with open(line_name, 'wb') as f:
+        f.write(linedata)
+        f.close()
+    line = cv2.imread(line_name, flags=cv2.IMREAD_COLOR)[:, :, [2, 1, 0]]
+    hint = cv2.imread(hint_name, flags=cv2.IMREAD_UNCHANGED)[:, :, [2, 1, 0, 3]]
+    # line = np.zeros([256, 256, 3])
     line = process.resize_img(line, size=256, pad_value=255)
     hint = process.resize_img(hint, size=256, pad_value=0)
-    line = np.sum(line, axis=2, keepdims=True)
+    line = np.mean(line, axis=2, keepdims=True, dtype=np.uint8)
 
     line = F.to_tensor(line).unsqueeze(0).to(device).float()
     line = process.normalize(line)
+    line = (line > 0).float()
     hint = F.to_tensor(hint).unsqueeze(0).to(device).float()
     hint[:, [0, 1, 2], :, :] = process.normalize(hint[:, [0, 1, 2], :, :])
     input = torch.cat([line, hint], dim=1)[:, [0, 4, 1, 2, 3], :, :]  # sketch, Mask, RGB
+
+    real_path = '../../CS470_Project/data/safebooru/solo/color'
+    img_path = os.listdir(real_path)[0]
+    real_image = cv2.imread(os.path.join(real_path, img_path), flags=cv2.IMREAD_COLOR)[:, :, [2,1,0]]
+    real_image = F.to_tensor(real_image).unsqueeze(0).to(device).float()
+    real_image = process.normalize(real_image)
     with torch.no_grad():
-        output = process.denormalize(model.inference(input, z))
+        output = process.denormalize(model.inference(input, real_image, z))
     output = output.squeeze(0).cpu().numpy()
     output = np.transpose(output, axes=[1, 2, 0])
-    print(output.shape)
-    print(output.min(), output.max(), output.mean())
+    output = (output * 255 // 1).astype(np.uint8)
     cv2.imwrite('./data/output/output_test.png', output)
 
     #for test
