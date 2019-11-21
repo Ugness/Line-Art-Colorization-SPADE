@@ -193,6 +193,7 @@ function init () {
                     'rgba': canvasArray[1].canvas[0].toDataURL(),
                     'width': canvasArray[1].canvas[0].width,
                     'height': canvasArray[1].canvas[0].height,
+                    'line': canvasArray[0].canvas[0].toDataURL(),
                     'z': z_vector.value},
             method: 'POST',
             success: function(data) {
