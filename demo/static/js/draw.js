@@ -190,9 +190,9 @@ function init () {
         $.ajax({
             url: '/colorization/',
             data: {
-                    'rgba': canvasArray[0].canvas[0].toDataURL(),
-                    'width': canvasArray[0].canvas[0].width,
-                    'height': canvasArray[0].canvas[0].height,
+                    'rgba': canvasArray[1].canvas[0].toDataURL(),
+                    'width': canvasArray[1].canvas[0].width,
+                    'height': canvasArray[1].canvas[0].height,
                     'z': z_vector.value},
             method: 'POST',
             success: function(data) {
