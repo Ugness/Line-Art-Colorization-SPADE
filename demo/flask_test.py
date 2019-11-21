@@ -13,8 +13,8 @@ def index():
 @app.route("/colorization/", methods=['POST'])
 def sum():
     rgba = request.form.get("rgba")
-    width = int(request.form.get("width"))
-    height = int(request.form.get("height"))
+    width = int(float(request.form.get("width")))
+    height = int(float(request.form.get("height")))
 
     imgdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
