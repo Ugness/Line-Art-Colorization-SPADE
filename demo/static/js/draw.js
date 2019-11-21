@@ -196,9 +196,13 @@ function init () {
                     'z': z_vector.value},
             method: 'POST',
             success: function(data) {
-                var img = new Image;
+                let temp_canvas = $('#result')[0];
+                let temp_ctx = temp_canvas.getContext('2d');
+                let w = temp_canvas.width;
+                temp_ctx.clearRect(0, 0, w, w);
+                let img = new Image;
                 img.src = data['output'];
-                canvasArray[0].ctx.drawImage(img,0,0);
+                temp_ctx.drawImage(img,0,0);
             }
         });
     });
@@ -212,9 +216,12 @@ function init () {
                     'height': canvasArray[0].canvas[0].height},
             method: 'POST',
             success: function(data) {
-                var img = new Image;
-                img.src = data['output'];
-                canvasArray[0].ctx.drawImage(img,0,0);
+                sketchImage = new Image;
+                sketchImage.src = data['output'];
+
+                let w = canvasArray[0].canvas[0].width;
+                canvasArray[0].strokes = [];
+                redraw()
             }
         });
     });
