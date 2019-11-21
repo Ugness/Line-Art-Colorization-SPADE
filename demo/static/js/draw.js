@@ -202,7 +202,7 @@ function init () {
                 temp_ctx.clearRect(0, 0, w, w);
                 let img = new Image;
                 img.src = data['output'];
-                temp_ctx.drawImage(img,0,0);
+                temp_ctx.drawImage(img,0,0, img.width, img.height, 0, 0, w, w);
             }
         });
     });
