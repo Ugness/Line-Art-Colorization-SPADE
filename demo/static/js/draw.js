@@ -88,9 +88,18 @@ function init () {
         .mouseup(mouseUp)
         .mousemove(mouseMove);
 
+    $('#load-btn').click(function(){
+        $('#files').click();
+    });
 
     $('#save-btn').click(function () {
-        window.open(canvas[0].toDataURL());
+        var element = document.createElement('a');
+        element.href = canvas[0].toDataURL();
+        element.download = "result.png";
+        element.style.display='none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     });
 
     $('#undo-btn').click(function () {
