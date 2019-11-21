@@ -224,9 +224,8 @@ function handleFileSelect(evt) {
     var files = evt.target.files; // FileList object
 
     // Loop through the FileList and render image files as thumbnails.
-    for (var i = 0, f; f = files[i]; i++) {
-        var reader = new FileReader();
-
+    var reader = new FileReader();
+    f = files[0];
       // Closure to capture the file information.
       reader.onload = (function() {
           return function(e) {
@@ -238,8 +237,7 @@ function handleFileSelect(evt) {
       })(f);
 
       // Read in the image file as a data URL.
-      reader.readAsDataURL(f);
-    }
+    reader.readAsDataURL(f);
   }
 
 $(init);
