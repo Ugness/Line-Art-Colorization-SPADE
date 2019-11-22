@@ -1,5 +1,7 @@
 import numpy as np
 import cv2
+from PIL import Image
+import torchvision.transforms.functional as F
 
 
 def resize_img(img, size=768, pad_value=255, mod='nearest'):
@@ -39,3 +41,31 @@ def normalize(image):
 
 def denormalize(image):
     return (image * 0.5) + 0.5
+
+
+def getitem(line, hint):
+    # Assuming hint_img / line_img already re-sized.
+
+    hint_img = np.array(hint)
+    line_img = np.array(line)
+
+    mask_img = hint_img[:, :, [3, ]]
+    hint_img = hint_img[:, :, [0, 1, 2, ]]
+
+    # Target tensor: normalized Lab color image
+    color_hint = np.concatenate([mask_img, hint_img], axis=2)
+    hint_tensor = F.to_tensor(color_hint)
+    line_img = F.to_tensor(line_img)
+    hint_img[1:, :, :] = normalize(hint_img[1:, :, :])
+    line_img = normalize(line_img)
+
+    # Fit to SPADE
+    real_image = None
+    sketch_tensor = line_img
+    image_path = None
+
+    return {'label': real_image,
+            'instance': hint_tensor.unsqueeze(0).float(),
+            'image': sketch_tensor.unsqueeze(0).float(),
+            'path': image_path,
+            }

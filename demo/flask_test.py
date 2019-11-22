@@ -12,6 +12,7 @@ from PIL import Image
 import io
 
 import sys
+
 sys.path.append('..')
 
 from options.demo_options import DemoOptions
@@ -26,7 +27,7 @@ app = Flask(__name__)
 def index():
     return render_template('test.html')
 
-  
+
 @app.route("/colorization/", methods=['POST'])
 def sum():
     # Preparing Inputs
@@ -38,7 +39,7 @@ def sum():
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
-    hint_name = './data/hint/hint_'+ timestamp +'.png'
+    hint_name = './data/hint/hint_' + timestamp + '.png'
     with open(hint_name, 'wb') as f:
         f.write(hintdata)
         f.close()
@@ -50,15 +51,17 @@ def sum():
         f.write(linedata)
         f.close()
 
-    line = Image.open('../../CS470_Project/data/safebooru/test_upper_body_768/line/original/2329616.jpg').convert('L')
+    output_name = './data/output/output_' + timestamp + '.png'
+
+    # line = Image.open('../../CS470_Project/data/safebooru/test_upper_body_768/line/original/2329616.jpg').convert('L')
     hint = Image.open(io.BytesIO(hintdata)).convert("RGBA")
-    # line = Image.open(io.BytesIO(linedata)).convert("L")
-    hint.save(hint_name)
+    line = Image.open(io.BytesIO(linedata)).convert("L")
     line.save(line_name)
+    hint.save(hint_name)
 
-    hint = np.array(hint)   # RGBA
+    hint = np.array(hint)  # RGBA
 
-    line = np.array(line)   # RGBA -> L
+    line = np.array(line)  # RGBA -> L
     line = np.expand_dims(line, axis=2)
 
     # RGBA to mask + hint
@@ -70,44 +73,24 @@ def sum():
     hint = process.resize_img(hint, size=256, pad_value=0, mod='bilinear')
     mask = process.resize_img(mask, size=256, pad_value=0, mod='bilinear')
 
-    # ndarray to torch.Tensor
-    line = F.to_tensor(line).float()
-    hint = F.to_tensor(hint).float()
-    mask = F.to_tensor(mask).float()
+    hint = np.concatenate([hint, mask], axis=2)
 
-    # normalize
-    line = process.normalize(line)
-    hint = process.normalize(hint)
-
-    # concat Mask and Hint
-    # print(hint.max(), mask.max(), line.max())
-    # print(hint.min(), mask.min(), line.min())
-    mask_hint = torch.cat([mask, hint], dim=0).unsqueeze(0).to(device)
-    line = line.unsqueeze(0).to(device)
-
-    F.to_pil_image(process.denormalize(hint.cpu())).save(hint_name)
-    F.to_pil_image(mask).save('./data/mask.png')
-    F.to_pil_image(process.denormalize(line[0].cpu())).save(line_name)
-
-    data = {'label': None, 'instance': mask_hint, 'image': line}
+    data = process.getitem(line, hint)
     with torch.no_grad():
-        output = model(data, 'inference')
-    print(output.max(), output.min())
-    output = util.tensor2im(output)
-    util.save_image(output[0], './data/output/output_test.png', create_dir=True)
-    print(output.shape)
-    # output = F.to_pil_image(output)
-    # output.save('./data/output/output_test.png')
+        color_img = model(data, 'inference')
+    color_img = util.tensor2im(color_img)
+    util.save_image(color_img[0], output_name, create_dir=True)
 
-    #for test
-    f_name = './data/output/output_test.png'
+    # for test
+    f_name = output_name
     with open(f_name, 'rb') as f:
         output = base64.b64encode(f.read()).decode("utf-8")
         f.close()
 
-    data = {'output': prefix+","+output}
+    data = {'output': prefix + "," + output}
     data = jsonify(data)
     return data
+
 
 @app.route("/simplification/", methods=['POST'])
 def simplification():
@@ -119,19 +102,19 @@ def simplification():
     prefix = line.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
 
-    f_name = './data/line/line_'+ timestamp +'.png'
+    f_name = './data/line/line_' + timestamp + '.png'
     with open(f_name, 'wb') as f:
         f.write(imgdata)
         f.close()
 
     np_img = np.frombuffer(imgdata)
     print(np_img.shape)
-    f_name = './data/simplified/simplified_'+ timestamp +'.png'
+    f_name = './data/simplified/simplified_' + timestamp + '.png'
     with open(f_name, 'rb') as f:
         output = base64.b64encode(f.read()).decode("utf-8")
         f.close()
 
-    data = {'output': prefix+","+output}
+    data = {'output': prefix + "," + output}
     data = jsonify(data)
     return data
 
