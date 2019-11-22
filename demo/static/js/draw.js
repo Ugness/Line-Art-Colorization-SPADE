@@ -12,7 +12,9 @@ let canvasArray = Array(canvasCount),
         value: 0.0,
     },
     currentStroke = null,
-    sketchImage = null;
+    sketchImage = null,
+    colorImage = null,
+    colorCanvas = null;
 
 function redraw () {
     for (let c = 0 ; c < canvasCount ; c++) {
@@ -20,12 +22,19 @@ function redraw () {
         let w = canvasArray[c].canvas[0].width;
         let strokes = canvasArray[c].strokes;
 
-        ctx.clearRect(0, 0, w, w);
+        if(c === 1) {
+            ctx.clearRect(0, 0, w, w);
+        }
+        else{
+            let old_style = ctx.fillStyle;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0,0,w,w);
+            ctx.fillStyle = old_style;
+        }
         ctx.lineCap = 'square';
         if (sketchImage != null && c === 0) {
             console.log("sketch loaded?");
-            ctx.drawImage(sketchImage, 0, 0, sketchImage.width, sketchImage.height,
-                                        0, 0, w, w);
+            scaletoFit(sketchImage, canvasArray[c].canvas[0], ctx);
         }
 
         for (let i = 0; i < strokes.length; i++) {
@@ -66,10 +75,16 @@ function init () {
     });
     canvasArray[1].ctx = canvasArray[1].canvas[0].getContext('2d');
 
-    $('#result').attr({
+    colorCanvas = {
+        canvas: $('#result'),
+        ctx: null,
+    };
+
+    colorCanvas.canvas.attr({
         width: innerWidth < innerHeight ? innerWidth : innerHeight,
         height: innerWidth < innerHeight ? innerWidth : innerHeight,
     });
+    colorCanvas.ctx = colorCanvas.canvas[0].getContext('2d');
 
     function mouseEvent (e) {
         let canvas = canvasArray[currentCanvas.Value].canvas;
@@ -162,8 +177,8 @@ function init () {
     });
 
     $('#save-btn').click(function () {
-        var element = document.createElement('a');
-        element.href = canvasArray[0].canvas.toDataURL();
+        let element = document.createElement('a');
+        element.href = colorCanvas.canvas[0].toDataURL();
         element.download = "result.png";
         element.style.display='none';
         document.body.appendChild(element);
@@ -241,15 +256,19 @@ function init () {
         $.ajax({
             url: '/colorization/',
             data: {
-                    'rgba': canvasArray[0].canvas[0].toDataURL(),
-                    'width': canvasArray[0].canvas[0].width,
-                    'height': canvasArray[0].canvas[0].height,
+                    'rgba': canvasArray[1].canvas[0].toDataURL(),
+                    'width': canvasArray[1].canvas[0].width,
+                    'height': canvasArray[1].canvas[0].height,
+                    'line': canvasArray[0].canvas[0].toDataURL(),
                     'z': z_vector.value},
             method: 'POST',
             success: function(data) {
-                var img = new Image;
-                img.src = data['output'];
-                canvasArray[0].ctx.drawImage(img,0,0);
+                console.log('color data came!');
+                colorImage = new Image;
+                colorImage.src = data['output'];
+                colorImage.onload = function(){
+                  scaletoFit(this, colorCanvas.canvas[0], colorCanvas.ctx);
+                };
             }
         });
     });
@@ -263,12 +282,21 @@ function init () {
                     'height': canvasArray[0].canvas[0].height},
             method: 'POST',
             success: function(data) {
-                var img = new Image;
-                img.src = data['output'];
-                canvasArray[0].ctx.drawImage(img,0,0);
+                canvasArray[0].strokes = [];
+                sketchImage = new Image;
+                sketchImage.src = data['output'];
+                sketchImage.onload = redraw
             }
         });
     });
+}
+
+function scaletoFit(img, canvas, ctx){
+    let scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+    let x = (canvas.width / 2) - (img.width / 2) * scale;
+    let y = (canvas.height / 2) - (img.height / 2) * scale;
+    console.log(canvas.width,canvas.height,img.width,img.height);
+    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
 }
 
 function handleFileSelect(evt) {
@@ -280,7 +308,6 @@ function handleFileSelect(evt) {
       // Closure to capture the file information.
       reader.onload = (function() {
           return function(e) {
-              console.log(e.target.result);
               sketchImage = new Image;
               sketchImage.src = e.target.result;
               sketchImage.onload = redraw;

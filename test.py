@@ -6,7 +6,7 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 import os
 from collections import OrderedDict
 
-import data
+import dataloader
 from options.test_options import TestOptions
 from models.pix2pix_model import Pix2PixModel
 from util.visualizer import Visualizer
@@ -14,7 +14,7 @@ from util import html
 
 opt = TestOptions().parse()
 
-dataloader = data.create_dataloader(opt)
+dataloader = dataloader.SafebooruDataLoader(opt)
 
 model = Pix2PixModel(opt)
 model.eval()

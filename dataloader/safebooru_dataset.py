@@ -26,6 +26,7 @@ class SafebooruDataset(BaseDataset):
         parser.add_argument('--ab_norm', type=float, default=110.)
         parser.add_argument('--sample_Ps', type=int, nargs=3, default=[1, 9, 1])
         parser.add_argument('--mask_cent', type=float, default=0.)
+        parser.add_argument('--hsv_aug', type=float, default=0, help='Use HSV Augmentation')
 
         return parser
 
