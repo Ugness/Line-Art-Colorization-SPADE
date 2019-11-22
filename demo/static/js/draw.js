@@ -12,7 +12,9 @@ let canvasArray = Array(canvasCount),
         value: 0.0,
     },
     currentStroke = null,
-    sketchImage = null;
+    sketchImage = null,
+    colorImage = null,
+    colorCanvas = null;
 
 function redraw () {
     for (let c = 0 ; c < canvasCount ; c++) {
@@ -73,10 +75,16 @@ function init () {
     });
     canvasArray[1].ctx = canvasArray[1].canvas[0].getContext('2d');
 
-    $('#result').attr({
+    colorCanvas = {
+        canvas: $('#result'),
+        ctx: null,
+    };
+
+    colorCanvas.canvas.attr({
         width: innerWidth < innerHeight ? innerWidth : innerHeight,
         height: innerWidth < innerHeight ? innerWidth : innerHeight,
     });
+    colorCanvas.ctx = colorCanvas.canvas[0].getContext('2d');
 
     function mouseEvent (e) {
         let canvas = canvasArray[currentCanvas.Value].canvas;
@@ -126,8 +134,8 @@ function init () {
     });
 
     $('#save-btn').click(function () {
-        var element = document.createElement('a');
-        element.href = $('#result')[0].toDataURL();
+        let element = document.createElement('a');
+        element.href = colorCanvas.canvas[0].toDataURL();
         element.download = "result.png";
         element.style.display='none';
         document.body.appendChild(element);
@@ -204,13 +212,12 @@ function init () {
                     'z': z_vector.value},
             method: 'POST',
             success: function(data) {
-                let temp_canvas = $('#result')[0];
-                let temp_ctx = temp_canvas.getContext('2d');
-                let w = temp_canvas.width;
-                temp_ctx.clearRect(0, 0, w, w);
-                let img = new Image;
-                img.src = data['output'];
-                scaletoFit(img, temp_canvas, temp_ctx);
+                console.log('color data came!');
+                colorImage = new Image;
+                colorImage.src = data['output'];
+                colorImage.onload = function(){
+                  scaletoFit(this, colorCanvas.canvas[0], colorCanvas.ctx);
+                };
             }
         });
     });
@@ -224,21 +231,20 @@ function init () {
                     'height': canvasArray[0].canvas[0].height},
             method: 'POST',
             success: function(data) {
+                canvasArray[0].strokes = [];
                 sketchImage = new Image;
                 sketchImage.src = data['output'];
-
-                let w = canvasArray[0].canvas[0].width;
-                canvasArray[0].strokes = [];
-                redraw();
+                sketchImage.onload = redraw
             }
         });
     });
 }
 
 function scaletoFit(img, canvas, ctx){
-    var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-    var x = (canvas.width / 2) - (img.width / 2) * scale;
-    var y = (canvas.height / 2) - (img.height / 2) * scale;
+    let scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+    let x = (canvas.width / 2) - (img.width / 2) * scale;
+    let y = (canvas.height / 2) - (img.height / 2) * scale;
+    console.log(canvas.width,canvas.height,img.width,img.height);
     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
 }
 
