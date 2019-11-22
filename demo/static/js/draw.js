@@ -110,9 +110,52 @@ function init () {
             mouseEvent(e);
     }
 
+    function touchEvent (e) {
+        let canvas = canvasArray[currentCanvas.Value].canvas;
+
+        let rect = canvas[0].getBoundingClientRect(),
+            scaleX = canvas[0].width / rect.width,
+            scaleY = canvas[0].height / rect.height;
+        brush.x = (e.changedTouches[0].pageX - rect.left) * scaleX;
+        brush.y = (e.changedTouches[0].pageY - rect.top) * scaleY;
+
+        currentStroke.points.push({
+            x: brush.x,
+            y: brush.y,
+        });
+
+        redraw();
+    }
+    function touchStart (e) {
+        console.log(currentCanvas.Value);
+        brush.down = true;
+        currentStroke = {
+            color: brush.color,
+            size: brush.size,
+            points: [],
+        };
+        console.log("stroke added to %d\n", currentCanvas.Value);
+        canvasArray[currentCanvas.Value].strokes.push(currentStroke);
+        touchEvent(e);
+    }
+    function touchEnd (e) {
+        brush.down = false;
+        if (currentCanvas.Value === 0)
+            touchEvent(e);
+        currentStroke = null;
+    }
+    function touchMove (e) {
+        if (brush.down && currentCanvas.Value === 0)
+            touchEvent(e);
+    }
+
     canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousedown", mouseDown);
     canvasArray[currentCanvas.Value].canvas[0].addEventListener("mouseup", mouseUp);
     canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousemove", mouseMove);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchstart", touchStart);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchend", touchEnd);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchcancel", touchEnd);
+    canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchmove", touchMove);
 
     $('#load-btn').click(function(){
         $('#files').click();
@@ -144,6 +187,10 @@ function init () {
         canvasArray[currentCanvas.Value].canvas[0].removeEventListener("mousedown", mouseDown);
         canvasArray[currentCanvas.Value].canvas[0].removeEventListener("mouseup", mouseUp);
         canvasArray[currentCanvas.Value].canvas[0].removeEventListener("mousemove", mouseMove);
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("touchstart", touchStart);
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("touchend", touchEnd);
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("touchcancel", touchEnd);
+        canvasArray[currentCanvas.Value].canvas[0].removeEventListener("touchmove", touchMove);
         canvasArray[currentCanvas.Value].canvas[0].style.pointerEvents = "none";
 
 
@@ -153,6 +200,10 @@ function init () {
         canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousedown", mouseDown);
         canvasArray[currentCanvas.Value].canvas[0].addEventListener("mouseup", mouseUp);
         canvasArray[currentCanvas.Value].canvas[0].addEventListener("mousemove", mouseMove);
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchstart", touchStart);
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchend", touchEnd);
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchcancel", touchEnd);
+        canvasArray[currentCanvas.Value].canvas[0].addEventListener("touchmove", touchMove);
         canvasArray[currentCanvas.Value].canvas[0].style.pointerEvents = "auto";
 
         redraw();
