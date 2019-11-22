@@ -20,12 +20,19 @@ function redraw () {
         let w = canvasArray[c].canvas[0].width;
         let strokes = canvasArray[c].strokes;
 
-        ctx.clearRect(0, 0, w, w);
+        if(c === 1) {
+            ctx.clearRect(0, 0, w, w);
+        }
+        else{
+            let old_style = ctx.fillStyle;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0,0,w,w);
+            ctx.fillStyle = old_style;
+        }
         ctx.lineCap = 'square';
         if (sketchImage != null && c === 0) {
             console.log("sketch loaded?");
-            ctx.drawImage(sketchImage, 0, 0, sketchImage.width, sketchImage.height,
-                                        0, 0, w, w);
+            scaletoFit(sketchImage, canvasArray[c].canvas[0], ctx);
         }
 
         for (let i = 0; i < strokes.length; i++) {
@@ -203,7 +210,7 @@ function init () {
                 temp_ctx.clearRect(0, 0, w, w);
                 let img = new Image;
                 img.src = data['output'];
-                temp_ctx.drawImage(img,0,0, img.width, img.height, 0, 0, w, w);
+                scaletoFit(img, temp_canvas, temp_ctx);
             }
         });
     });
@@ -226,6 +233,13 @@ function init () {
             }
         });
     });
+}
+
+function scaletoFit(img, canvas, ctx){
+    var scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+    var x = (canvas.width / 2) - (img.width / 2) * scale;
+    var y = (canvas.height / 2) - (img.height / 2) * scale;
+    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
 }
 
 function handleFileSelect(evt) {
