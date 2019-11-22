@@ -68,6 +68,10 @@ class Pix2PixModel(torch.nn.Module):
             with torch.no_grad():
                 fake_image, _ = self.generate_fake(input_semantics, real_image)
             return fake_image
+        elif mode == 'demo':
+            with torch.no_grad():
+                fake_image, _ = self.generate_fake(input_semantics, None)
+            return fake_image
         else:
             raise ValueError("|mode| is invalid")
 
@@ -136,7 +140,8 @@ class Pix2PixModel(torch.nn.Module):
             image -> sketch
         """
         if self.use_gpu():
-            data['label'] = data['label'].cuda()
+            if data['label'] is not None:
+                data['label'] = data['label'].cuda()
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
@@ -225,7 +230,7 @@ class Pix2PixModel(torch.nn.Module):
     def generate_fake(self, input_semantics, real_image, compute_kld_loss=False):
         z = None
         KLD_loss = None
-        if self.opt.use_vae:
+        if self.opt.use_vae and real_image is not None:
             z, mu, logvar = self.encode_z(real_image)
             if compute_kld_loss:
                 KLD_loss = self.KLDLoss(mu, logvar) * self.opt.lambda_kld
@@ -287,13 +292,3 @@ class Pix2PixModel(torch.nn.Module):
 
     def use_gpu(self):
         return len(self.opt.gpu_ids) > 0
-
-    def inference(self, x, real_image, shift):
-        z = None
-        KLD_loss = None
-        if self.opt.use_vae:
-            z, mu, logvar = self.encode_z(real_image)
-
-        fake_image = self.netG(x.float(), z)
-
-        return fake_image

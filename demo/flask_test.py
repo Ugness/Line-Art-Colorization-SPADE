@@ -8,6 +8,8 @@ import os
 import process
 import torchvision.transforms.functional as F
 import cv2
+from PIL import Image
+import io
 
 import sys
 sys.path.append('..')
@@ -15,6 +17,7 @@ sys.path.append('..')
 from options.demo_options import DemoOptions
 from models.pix2pix_model import Pix2PixModel
 from utils.preprocessing.sketch_simplification.simplify import get_model
+from util import util
 
 app = Flask(__name__)
 
@@ -26,6 +29,7 @@ def index():
   
 @app.route("/colorization/", methods=['POST'])
 def sum():
+    # Preparing Inputs
     rgba = request.form.get("rgba")
     width = int(float(request.form.get("width")))
     height = int(float(request.form.get("height")))
@@ -45,31 +49,55 @@ def sum():
     with open(line_name, 'wb') as f:
         f.write(linedata)
         f.close()
-    line = cv2.imread(line_name, flags=cv2.IMREAD_COLOR)[:, :, [2, 1, 0]]
-    hint = cv2.imread(hint_name, flags=cv2.IMREAD_UNCHANGED)[:, :, [2, 1, 0, 3]]
-    # line = np.zeros([256, 256, 3])
-    line = process.resize_img(line, size=256, pad_value=255)
-    hint = process.resize_img(hint, size=256, pad_value=0)
-    line = np.mean(line, axis=2, keepdims=True, dtype=np.uint8)
 
-    line = F.to_tensor(line).unsqueeze(0).to(device).float()
+    line = Image.open('../../CS470_Project/data/safebooru/test_upper_body_768/line/original/2329616.jpg').convert('L')
+    hint = Image.open(io.BytesIO(hintdata)).convert("RGBA")
+    # line = Image.open(io.BytesIO(linedata)).convert("L")
+    hint.save(hint_name)
+    line.save(line_name)
+
+    hint = np.array(hint)   # RGBA
+
+    line = np.array(line)   # RGBA -> L
+    line = np.expand_dims(line, axis=2)
+
+    # RGBA to mask + hint
+    mask = hint[:, :, [3, ]]
+    hint = hint[:, :, [0, 1, 2]]
+
+    # Resize
+    line = process.resize_img(line, size=256, pad_value=255, mod='nearest')
+    hint = process.resize_img(hint, size=256, pad_value=0, mod='bilinear')
+    mask = process.resize_img(mask, size=256, pad_value=0, mod='bilinear')
+
+    # ndarray to torch.Tensor
+    line = F.to_tensor(line).float()
+    hint = F.to_tensor(hint).float()
+    mask = F.to_tensor(mask).float()
+
+    # normalize
     line = process.normalize(line)
-    line = (line > 0).float()
-    hint = F.to_tensor(hint).unsqueeze(0).to(device).float()
-    hint[:, [0, 1, 2], :, :] = process.normalize(hint[:, [0, 1, 2], :, :])
-    input = torch.cat([line, hint], dim=1)[:, [0, 4, 1, 2, 3], :, :]  # sketch, Mask, RGB
+    hint = process.normalize(hint)
 
-    real_path = '../../CS470_Project/data/safebooru/solo/color'
-    img_path = os.listdir(real_path)[0]
-    real_image = cv2.imread(os.path.join(real_path, img_path), flags=cv2.IMREAD_COLOR)[:, :, [2,1,0]]
-    real_image = F.to_tensor(real_image).unsqueeze(0).to(device).float()
-    real_image = process.normalize(real_image)
+    # concat Mask and Hint
+    # print(hint.max(), mask.max(), line.max())
+    # print(hint.min(), mask.min(), line.min())
+    mask_hint = torch.cat([mask, hint], dim=0).unsqueeze(0).to(device)
+    line = line.unsqueeze(0).to(device)
+
+    F.to_pil_image(process.denormalize(hint.cpu())).save(hint_name)
+    F.to_pil_image(mask).save('./data/mask.png')
+    F.to_pil_image(process.denormalize(line[0].cpu())).save(line_name)
+
+    data = {'label': None, 'instance': mask_hint, 'image': line}
     with torch.no_grad():
-        output = process.denormalize(model.inference(input, real_image, z))
-    output = output.squeeze(0).cpu().numpy()
-    output = np.transpose(output, axes=[1, 2, 0])
-    output = (output * 255 // 1).astype(np.uint8)
-    cv2.imwrite('./data/output/output_test.png', output)
+        output = model(data, 'inference')
+    print(output.max(), output.min())
+    output = util.tensor2im(output)
+    util.save_image(output[0], './data/output/output_test.png', create_dir=True)
+    print(output.shape)
+    # output = F.to_pil_image(output)
+    # output.save('./data/output/output_test.png')
 
     #for test
     f_name = './data/output/output_test.png'
@@ -113,12 +141,12 @@ if __name__ == "__main__":
     if opt.name is None:
         print("Experience Name required for loading model")
         exit()
-    if opt.cuda:
+    if opt.gpu_ids != -1:
         device = 'cuda'
     else:
         device = 'cpu'
     print("Loading Models ....")
-    model = Pix2PixModel(opt).to(device)
+    model = Pix2PixModel(opt)
     model.eval()
     sketch_model = get_model().to(device)
     sketch_dict = torch.load(opt.simplification, map_location=device)
