@@ -69,9 +69,9 @@ def sum():
     hint = hint[:, :, [0, 1, 2]]
 
     # Resize
-    line = process.resize_img(line, size=256, pad_value=255, mod='nearest')
-    hint = process.resize_img(hint, size=256, pad_value=0, mod='bilinear')
-    mask = process.resize_img(mask, size=256, pad_value=0, mod='bilinear')
+    line = process.resize_img(line, size=256, pad_value=255, mode='nearest')
+    hint = process.resize_img(hint, size=256, pad_value=0, mode='bilinear')
+    mask = process.resize_img(mask, size=256, pad_value=0, mode='bilinear')
 
     hint = np.concatenate([hint, mask], axis=2)
 
@@ -107,9 +107,16 @@ def simplification():
         f.write(imgdata)
         f.close()
 
-    np_img = np.frombuffer(imgdata)
-    print(np_img.shape)
+    immean = 0.9664114577640158
+    imstd = 0.0858381272736797
+    img = Image.open(io.BytesIO(imgdata)).convert("L")
+    img = np.expand_dims(np.array(img), axis=2)
+    data = process.resize_img(img, size=768, mode='nearest')
+    print(data.shape)
+    data = ((F.to_tensor(data) - immean) / imstd).unsqueeze(0).to(device)
+    pred = sketch_model.forward(data)
     f_name = './data/simplified/simplified_' + timestamp + '.png'
+    F.to_pil_image(pred[0].cpu()).save(f_name)
     with open(f_name, 'rb') as f:
         output = base64.b64encode(f.read()).decode("utf-8")
         f.close()

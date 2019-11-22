@@ -4,14 +4,14 @@ from PIL import Image
 import torchvision.transforms.functional as F
 
 
-def resize_img(img, size=768, pad_value=255, mod='nearest'):
+def resize_img(img, size=768, pad_value=255, mode='nearest'):
     # (H, W, C)
     H, W, C = img.shape
     dtype = img.dtype
     canvas = np.ones((size, size, C), dtype=dtype) * pad_value
-    if mod == 'nearest':
+    if mode == 'nearest':
         interpolation = cv2.INTER_NEAREST
-    elif mod == 'bilinear':
+    elif mode == 'bilinear':
         interpolation = cv2.INTER_LINEAR
     else:
         print("Select Mode nearest/bilinear")
