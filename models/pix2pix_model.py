@@ -70,7 +70,7 @@ class Pix2PixModel(torch.nn.Module):
             return fake_image
         elif mode == 'demo':
             with torch.no_grad():
-                fake_image, _ = self.generate_fake(input_semantics, None)
+                fake_image, _ = self.generate_fake(input_semantics, None, shift=data['shift'])
             return fake_image
         else:
             raise ValueError("|mode| is invalid")
@@ -227,13 +227,18 @@ class Pix2PixModel(torch.nn.Module):
         z = self.reparameterize(mu, logvar)
         return z, mu, logvar
 
-    def generate_fake(self, input_semantics, real_image, compute_kld_loss=False):
+    def generate_fake(self, input_semantics, real_image, compute_kld_loss=False, shift=0):
         z = None
         KLD_loss = None
         if self.opt.use_vae and real_image is not None:
             z, mu, logvar = self.encode_z(real_image)
             if compute_kld_loss:
                 KLD_loss = self.KLDLoss(mu, logvar) * self.opt.lambda_kld
+        if real_image is None:
+            z = torch.zeros([input_semantics.size(0), self.opt.z_dim],
+                            dtype=torch.float32, device=input_semantics.device)
+            # print(shift)
+            z[:, :] = z[:, :] + shift * 5
 
         fake_image = self.netG(input_semantics, z=z)
 
