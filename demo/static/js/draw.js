@@ -13,6 +13,7 @@ let canvasArray = Array(canvasCount),
     latent_shift = {
         value: 0.0,
     },
+    isDeter = 0,
     currentStroke = null,
     sketchImage = null,
     colorImage = null,
@@ -251,6 +252,10 @@ function init () {
         latent_shift.value = this.value;
     });
 
+    $('#is-deter').on('input', function(){
+        isDeter = this.value;
+    });
+
     $('#col-btn').click(function(){
         $.ajax({
             url: '/colorization/',
@@ -259,7 +264,8 @@ function init () {
                     'width': canvasArray[1].canvas[0].width,
                     'height': canvasArray[1].canvas[0].height,
                     'line': canvasArray[0].canvas[0].toDataURL(),
-                    'z': latent_shift.value},
+                    'z': latent_shift.value,
+                    'isDeter': isDeter},
             method: 'POST',
             success: function(data) {
                 console.log('color data came!');

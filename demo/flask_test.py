@@ -58,6 +58,7 @@ def sum():
     width = int(float(request.form.get("width")))
     height = int(float(request.form.get("height")))
     z = float(request.form.get("z"))
+    isDeter = bool(request.form.get("isDeter"))
 
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
