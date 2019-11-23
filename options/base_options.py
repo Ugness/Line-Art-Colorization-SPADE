@@ -41,8 +41,8 @@ class BaseOptions():
         parser.add_argument('--output_nc', type=int, default=3, help='# of output image channels')
 
         # for setting inputs
-        parser.add_argument('--dataroot', type=str, default='./datasets/cityscapes/')
-        parser.add_argument('--dataset_mode', type=str, default='coco')
+        parser.add_argument('--dataroot', type=str, default='./data/safebooru/upper_body_768')
+        parser.add_argument('--dataset_mode', type=str, default='safebooru')
         parser.add_argument('--serial_batches', action='store_true', help='if true, takes images in order to make batches, otherwise takes them randomly')
         parser.add_argument('--no_flip', action='store_true', help='if specified, do not flip the images for data argumentation')
         parser.add_argument('--nThreads', default=0, type=int, help='# threads for loading data')

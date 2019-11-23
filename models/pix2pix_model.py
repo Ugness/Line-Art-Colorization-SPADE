@@ -238,7 +238,7 @@ class Pix2PixModel(torch.nn.Module):
             z = torch.zeros([input_semantics.size(0), self.opt.z_dim],
                             dtype=torch.float32, device=input_semantics.device)
             # print(shift)
-            z[:, :] = z[:, :] + shift * 5
+            z[:, :] = z[:, :] + shift
 
         fake_image = self.netG(input_semantics, z=z)
 
