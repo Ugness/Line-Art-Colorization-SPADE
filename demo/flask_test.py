@@ -1,15 +1,17 @@
-from flask import Flask, flash, redirect, render_template, request, session, abort, jsonify
-import base64
-import numpy as np
-import argparse
-from time import gmtime, strftime
-import torch
 import os
-import process
-import torchvision.transforms.functional as F
-import cv2
-from PIL import Image
 import io
+from time import gmtime, strftime
+import base64
+import argparse
+import random
+
+import numpy as np
+import torch
+import torchvision.transforms.functional as F
+from PIL import Image
+from flask import Flask, flash, redirect, render_template, request, session, abort, jsonify
+
+import process
 
 import sys
 
@@ -19,6 +21,8 @@ from options.demo_options import DemoOptions
 from models.pix2pix_model import Pix2PixModel
 from utils.preprocessing.sketch_simplification.simplify import get_model
 from util import util
+
+torch.backends.cudnn.deterministic = True
 
 app = Flask(__name__)
 
@@ -76,8 +80,9 @@ def sum():
     hint = np.concatenate([hint, mask], axis=2)
 
     data = process.getitem(line, hint)
+    data['shift'] = z
     with torch.no_grad():
-        color_img = model(data, 'inference')
+        color_img = model(data, 'demo')
     color_img = util.tensor2im(color_img)
     util.save_image(color_img[0], output_name, create_dir=True)
 
@@ -136,6 +141,12 @@ if __name__ == "__main__":
     else:
         device = 'cpu'
     print("Loading Models ....")
+
+    torch.manual_seed(opt.seed)
+    torch.cuda.manual_seed_all(opt.seed)
+    np.random.seed(opt.seed)
+    random.seed(opt.seed)
+
     model = Pix2PixModel(opt)
     model.eval()
     sketch_model = get_model().to(device)
