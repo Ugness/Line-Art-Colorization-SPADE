@@ -1,6 +1,8 @@
 const canvasCount = 2;
 let canvasArray = Array(canvasCount),
-    currentCanvas = {Value: 0},
+    currentCanvas = {
+        Value: 0
+    },
     brush = {
         x: 0,
         y: 0,
@@ -8,7 +10,7 @@ let canvasArray = Array(canvasCount),
         size: 10,
         down: false,
     },
-    z_vector = {
+    latent_shift = {
         value: 0.0,
     },
     currentStroke = null,
@@ -248,8 +250,8 @@ function init () {
         brush.size = this.value;
     });
 
-    $('#z-vector').on('input', function(){
-        z_vector.value = this.value;
+    $('#latent-shift').on('input', function(){
+        latent_shift.value = this.value;
     });
 
     $('#col-btn').click(function(){
@@ -260,7 +262,7 @@ function init () {
                     'width': canvasArray[1].canvas[0].width,
                     'height': canvasArray[1].canvas[0].height,
                     'line': canvasArray[0].canvas[0].toDataURL(),
-                    'z': z_vector.value},
+                    'z': latent_shift.value},
             method: 'POST',
             success: function(data) {
                 console.log('color data came!');
