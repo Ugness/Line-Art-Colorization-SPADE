@@ -5,6 +5,24 @@ import base64
 import argparse
 import random
 
+# modules for sketchKeras
+import tensorflow as tf
+from keras.models import load_model
+from keras.engine import Input, Model
+import cv2
+from keras.backend import clear_session
+# import keras.backend.tensorflow_backend as tb
+# tb._SYMBOLIC_SCOPE.value = True
+
+tf.device("/CPU:0")
+# config = tf.compat.v1.ConfigProto()
+# config.gpu_options.per_process_gpu_memory_fraction = 0.3
+# session = tf.compat.v1.Session(config=config)
+# set_session(session)
+# tf.compat.v1.keras.backend.set_session(session)
+
+# tf.config.gpu.
+
 import numpy as np
 import torch
 import torchvision.transforms.functional as F
@@ -20,6 +38,7 @@ sys.path.append('..')
 from options.demo_options import DemoOptions
 from models.pix2pix_model import Pix2PixModel
 from utils.preprocessing.sketch_simplification.simplify import get_model
+from utils.sketchKeras.helper import *
 from util import util
 
 torch.backends.cudnn.deterministic = True
@@ -114,12 +133,28 @@ def simplification():
 
     immean = 0.9664114577640158
     imstd = 0.0858381272736797
-    img = Image.open(io.BytesIO(imgdata)).convert("L")
-    img = np.expand_dims(np.array(img), axis=2)
-    data = process.resize_img(img, size=768, mode='nearest')
-    print(data.shape)
-    data = ((F.to_tensor(data) - immean) / imstd).unsqueeze(0).to(device)
-    pred = sketch_model.forward(data)
+    img = np.array(Image.open(io.BytesIO(imgdata)).convert("RGB"))
+    # img = np.expand_dims(img, axis=2)
+    img = process.resize_img(img, size=512, mode='bilinear')
+    from_mat = img
+    H, W, C = img.shape
+    from_mat = from_mat.transpose((2, 0, 1))  # HWC -> CHW
+    light_map = np.zeros(from_mat.shape, dtype=np.float)
+    for channel in range(3):
+        light_map[channel] = get_light_map_single(from_mat[channel])
+    light_map = normalize_pic(light_map)
+    light_map = resize_img_512_3d(light_map)
+    with graph.as_default():
+        line_mat = mod.predict(light_map, batch_size=1)
+    line_mat = line_mat.transpose((3, 1, 2, 0))[0]
+    line_mat = line_mat[0:H, 0:W, :]
+    line_mat = np.amax(line_mat, 2)
+    sketch = get_denoised_img(line_mat)
+    print(sketch.shape)
+
+    print(sketch.shape)
+    sketch = ((F.to_tensor(sketch) - immean) / imstd).unsqueeze(0).to(device)
+    pred = simp_model.forward(sketch)
     f_name = './data/simplified/simplified_' + timestamp + '.png'
     F.to_pil_image(pred[0].cpu()).save(f_name)
     with open(f_name, 'rb') as f:
@@ -149,14 +184,19 @@ if __name__ == "__main__":
 
     model = Pix2PixModel(opt)
     model.eval()
-    sketch_model = get_model().to(device)
-    sketch_dict = torch.load(opt.simplification, map_location=device)
-    sketch_model.load_state_dict(sketch_dict)
-    print("Loading Models Done")
+    simp_model = get_model().to(device)
+    simp_state_dict = torch.load(opt.simplification, map_location=device)
+    simp_model.load_state_dict(simp_state_dict)
 
+    mod = load_model(opt.sketch)
+    mod.layers.pop(0)
+    weights = mod.get_weights()
+    graph = tf.get_default_graph()
+
+    print("Loading Models Done")
     os.makedirs('./data/hint', exist_ok=True)
     os.makedirs('./data/output', exist_ok=True)
     os.makedirs('./data/simplified', exist_ok=True)
     os.makedirs('./data/line', exist_ok=True)
 
-    app.run(host='0.0.0.0', port=opt.port, debug=True)
+    app.run(host='0.0.0.0', port=opt.port, debug=False)

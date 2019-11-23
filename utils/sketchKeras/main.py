@@ -7,17 +7,6 @@ import os
 import argparse
 from tqdm import tqdm
 
-mod = load_model('mod.h5')
-# mod.summary()
-mod.layers.pop(0)
-weights = mod.get_weights()
-
-new_input = Input(shape=(None, None, 1))
-new_output = mod(new_input)
-new_mod = Model(new_input, new_output)
-new_mod.layers[-1].set_weights(weights)
-
-
 def get(path):
     color_path = os.path.join(path, 'color')
     img_list = os.listdir(color_path)
@@ -62,6 +51,16 @@ def get(path):
     return
 
 if __name__ == '__main__':
+    mod = load_model('mod.h5')
+    # mod.summary()
+    mod.layers.pop(0)
+    weights = mod.get_weights()
+
+    new_input = Input(shape=(None, None, 1))
+    new_output = mod(new_input)
+    new_mod = Model(new_input, new_output)
+    new_mod.layers[-1].set_weights(weights)
+
     parser = argparse.ArgumentParser(description='Download images from given metadata.')
     parser.add_argument('--target-dir', type=str, help='directory of target folder')
     args = parser.parse_args()

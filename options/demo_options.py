@@ -16,6 +16,9 @@ class DemoOptions(TestOptions):
         parser.add_argument('-s', '--simplification', type=str,
                             default='../utils/preprocessing/sketch_simplification/model.pth',
                             help='Directory of sketch simplification model')
+        parser.add_argument('-sk', '--sketch', type=str,
+                            default='../utils/sketchKeras/mod.h5',
+                            help='Directory of sketchKeras model')
         parser.add_argument('--port', type=int, default=41234, help="Server port number")
         parser.add_argument('--seed', type=int, default=41234, help="random seed")
         return parser

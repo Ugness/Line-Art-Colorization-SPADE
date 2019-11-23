@@ -116,6 +116,11 @@ def resize_img_768_3d(img):
     zeros[0, 0: img.shape[0], 0: img.shape[1], 0: img.shape[2]] = img
     return zeros.transpose((1, 2, 3, 0))
 
+def resize_img_512_3d(img):
+    zeros = np.zeros((1, 3, 512, 512), dtype=np.float)
+    zeros[0, 0: img.shape[0], 0: img.shape[1], 0: img.shape[2]] = img
+    return zeros.transpose((1, 2, 3, 0))
+
 
 def show_active_img_and_save(name, img, path):
     mat = img.astype(np.float)
@@ -270,3 +275,15 @@ def get_active_img_and_save_denoise_filter2(img, path):
     mat = ndimage.median_filter(mat, 1)
     cv2.imwrite(path, mat)
     return
+
+
+def get_denoised_img(img):
+    mat = img.astype(np.float)
+    mat[mat < 0.1] = 0
+    mat = - mat + 1
+    mat = mat * 255.0
+    mat[mat < 0] = 0
+    mat[mat > 255] = 255
+    mat = mat.astype(np.uint8)
+    mat = ndimage.median_filter(mat, 1)
+    return mat
