@@ -8,6 +8,7 @@ import random
 # modules for sketchKeras
 import tensorflow as tf
 from keras.models import load_model
+from keras.engine import Input, Model
 
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
@@ -126,9 +127,9 @@ def simplification():
 
     immean = 0.9664114577640158
     imstd = 0.0858381272736797
-    img = np.array(Image.open(io.BytesIO(imgdata)).convert("RGB"))
+    img = np.array(Image.open(io.BytesIO(imgdata)).convert("RGB"))[:, :, [0,1,2]]
     # img = np.expand_dims(img, axis=2)
-    img = process.resize_img(img, size=512, mode='bilinear')
+    img = process.resize_img(img, size=768, mode='bilinear')
     from_mat = img
     H, W, C = img.shape
     from_mat = from_mat.transpose((2, 0, 1))  # HWC -> CHW
@@ -136,16 +137,16 @@ def simplification():
     for channel in range(3):
         light_map[channel] = get_light_map_single(from_mat[channel])
     light_map = normalize_pic(light_map)
-    light_map = resize_img_512_3d(light_map)
+    light_map = resize_img_768_3d(light_map)
     with graph.as_default():
-        line_mat = mod.predict(light_map, batch_size=1)
+        line_mat = new_mod.predict(light_map, batch_size=1)
     line_mat = line_mat.transpose((3, 1, 2, 0))[0]
     line_mat = line_mat[0:H, 0:W, :]
     line_mat = np.amax(line_mat, 2)
-    sketch = get_denoised_img(line_mat)
+    sketch = get_denoised_img_1(line_mat)
     print(sketch.shape)
 
-    print(sketch.shape)
+    print(F.to_tensor(sketch).max())
     with torch.no_grad():
         sketch = ((F.to_tensor(sketch) - immean) / imstd).unsqueeze(0).to(device)
         pred = simp_model.forward(sketch)
@@ -185,6 +186,11 @@ if __name__ == "__main__":
     mod = load_model(opt.sketch)
     mod.layers.pop(0)
     weights = mod.get_weights()
+
+    new_input = Input(shape=(None, None, 1))
+    new_output = mod(new_input)
+    new_mod = Model(new_input, new_output)
+    new_mod.layers[-1].set_weights(weights)
     graph = tf.get_default_graph()
 
     print("Loading Models Done")
@@ -193,4 +199,4 @@ if __name__ == "__main__":
     os.makedirs('./data/simplified', exist_ok=True)
     os.makedirs('./data/line', exist_ok=True)
 
-    app.run(host='0.0.0.0', port=opt.port, debug=False)
+    app.run(host='0.0.0.0', port=opt.port, debug=True)

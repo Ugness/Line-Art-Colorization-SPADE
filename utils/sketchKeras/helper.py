@@ -277,9 +277,20 @@ def get_active_img_and_save_denoise_filter2(img, path):
     return
 
 
-def get_denoised_img(img):
+def get_denoised_img_2(img):
     mat = img.astype(np.float)
     mat[mat < 0.1] = 0
+    mat = - mat + 1
+    mat = mat * 255.0
+    mat[mat < 0] = 0
+    mat[mat > 255] = 255
+    mat = mat.astype(np.uint8)
+    mat = ndimage.median_filter(mat, 1)
+    return mat
+
+def get_denoised_img_1(img):
+    mat = img.astype(np.float)
+    mat[mat < 0.18] = 0
     mat = - mat + 1
     mat = mat * 255.0
     mat[mat < 0] = 0
