@@ -1,27 +1,19 @@
 import os
+os.environ['KERAS_BACKEND'] = 'tensorflow'
 import io
 from time import gmtime, strftime
 import base64
-import argparse
 import random
 
 # modules for sketchKeras
 import tensorflow as tf
 from keras.models import load_model
-from keras.engine import Input, Model
-import cv2
-from keras.backend import clear_session
-# import keras.backend.tensorflow_backend as tb
-# tb._SYMBOLIC_SCOPE.value = True
 
-tf.device("/CPU:0")
-# config = tf.compat.v1.ConfigProto()
-# config.gpu_options.per_process_gpu_memory_fraction = 0.3
-# session = tf.compat.v1.Session(config=config)
-# set_session(session)
-# tf.compat.v1.keras.backend.set_session(session)
-
-# tf.config.gpu.
+# tf.device("/CPU:0")
+from keras.backend.tensorflow_backend import set_session
+config = tf.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.1
+set_session(tf.Session(config=config))
 
 import numpy as np
 import torch
@@ -154,10 +146,11 @@ def simplification():
     print(sketch.shape)
 
     print(sketch.shape)
-    sketch = ((F.to_tensor(sketch) - immean) / imstd).unsqueeze(0).to(device)
-    pred = simp_model.forward(sketch)
-    f_name = './data/simplified/simplified_' + timestamp + '.png'
-    F.to_pil_image(pred[0].cpu()).save(f_name)
+    with torch.no_grad():
+        sketch = ((F.to_tensor(sketch) - immean) / imstd).unsqueeze(0).to(device)
+        pred = simp_model.forward(sketch)
+        f_name = './data/simplified/simplified_' + timestamp + '.png'
+        F.to_pil_image(pred[0].cpu()).save(f_name)
     with open(f_name, 'rb') as f:
         output = base64.b64encode(f.read()).decode("utf-8")
         f.close()
