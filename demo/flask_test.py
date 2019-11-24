@@ -127,7 +127,7 @@ def simplification():
 
     immean = 0.9664114577640158
     imstd = 0.0858381272736797
-    img = np.array(Image.open(io.BytesIO(imgdata)).convert("RGB"))[:, :, [0,1,2]]
+    img = np.array(Image.open(io.BytesIO(imgdata)).convert("RGB"))
     # img = np.expand_dims(img, axis=2)
     img = process.resize_img(img, size=768, mode='bilinear')
     from_mat = img
@@ -143,7 +143,7 @@ def simplification():
     line_mat = line_mat.transpose((3, 1, 2, 0))[0]
     line_mat = line_mat[0:H, 0:W, :]
     line_mat = np.amax(line_mat, 2)
-    sketch = get_denoised_img_1(line_mat)
+    sketch = get_enhanced_img(line_mat)
     print(sketch.shape)
 
     print(F.to_tensor(sketch).max())
