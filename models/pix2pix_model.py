@@ -234,7 +234,7 @@ class Pix2PixModel(torch.nn.Module):
             z, mu, logvar = self.encode_z(real_image)
             if compute_kld_loss:
                 KLD_loss = self.KLDLoss(mu, logvar) * self.opt.lambda_kld
-        if real_image is None:
+        if real_image is None and isinstance(shift, float):
             z = torch.zeros([input_semantics.size(0), self.opt.z_dim],
                             dtype=torch.float32, device=input_semantics.device)
             # print(shift)

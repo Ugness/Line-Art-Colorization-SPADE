@@ -9,7 +9,6 @@ import random
 import tensorflow as tf
 from keras.models import load_model
 
-# tf.device("/CPU:0")
 from keras.backend.tensorflow_backend import set_session
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.1
@@ -50,8 +49,7 @@ def sum():
     width = int(float(request.form.get("width")))
     height = int(float(request.form.get("height")))
     z = float(request.form.get("z"))
-    isDeter = bool(request.form.get("isDeter"))
-
+    isDeter = float(request.form.get("isDeter")) > 0.5
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
@@ -93,6 +91,8 @@ def sum():
 
     data = process.getitem(line, hint)
     data['shift'] = z
+    if not isDeter:
+        data['shift'] = 'random'
     with torch.no_grad():
         color_img = model(data, 'demo')
     color_img = util.tensor2im(color_img)
