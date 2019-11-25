@@ -109,6 +109,18 @@ def sum():
     data = jsonify(data)
     return data
 
+@app.route("/default/", methods=['POST'])
+def default():
+    f_name = './data/default/default_yoomi.png'
+    with open(f_name, 'rb') as f:
+        output = base64.b64encode(f.read()).decode("utf-8")
+        f.close()
+
+    data = {'output':"data:image/png;base64," + output}
+    data = jsonify(data)
+    return data
+
+
 
 @app.route("/simplification/", methods=['POST'])
 def simplification():

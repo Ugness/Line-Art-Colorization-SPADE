@@ -278,6 +278,20 @@ function init () {
         });
     });
 
+    $('#load-default').click(function(){
+        $.ajax({
+            url: '/default/',
+            data: {},
+            method: 'POST',
+            success: function(data) {
+                canvasArray[0].strokes = [];
+                sketchImage = new Image;
+                sketchImage.src = data['output'];
+                sketchImage.onload = redraw
+            }
+        });
+    });
+
     $('#sim-btn').click(function(){
         $.ajax({
             url: '/simplification/',
