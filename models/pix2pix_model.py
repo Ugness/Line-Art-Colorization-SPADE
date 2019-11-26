@@ -68,6 +68,10 @@ class Pix2PixModel(torch.nn.Module):
             with torch.no_grad():
                 fake_image, _ = self.generate_fake(input_semantics, real_image)
             return fake_image
+        elif mode == 'demo':
+            with torch.no_grad():
+                fake_image, _ = self.generate_fake(input_semantics, None, shift=data['shift'])
+            return fake_image
         else:
             raise ValueError("|mode| is invalid")
 
@@ -136,7 +140,8 @@ class Pix2PixModel(torch.nn.Module):
             image -> sketch
         """
         if self.use_gpu():
-            data['label'] = data['label'].cuda()
+            if data['label'] is not None:
+                data['label'] = data['label'].cuda()
             data['instance'] = data['instance'].cuda()
             data['image'] = data['image'].cuda()
 
@@ -145,20 +150,6 @@ class Pix2PixModel(torch.nn.Module):
         if self.opt.use_F:
             sketch_feature = F.interpolate(self.netF(input_semantics), size=data['image'].size(3), mode='bilinear')
             input_semantics = torch.cat((input_semantics, sketch_feature), dim=1)
-
-        # # create one-hot label map
-        # label_map = data['label']
-        # bs, _, h, w = label_map.size()
-        # nc = self.opt.label_nc + 1 if self.opt.contain_dontcare_label \
-        #     else self.opt.label_nc
-        # input_label = self.FloatTensor(bs, nc, h, w).zero_()
-        # input_semantics = input_label.scatter_(1, label_map, 1.0)
-
-        # # concatenate instance map if it exists
-        # if not self.opt.no_instance:
-        #     inst_map = data['instance']
-        #     instance_edge_map = self.get_edges(inst_map)
-        #     input_semantics = torch.cat((input_semantics, instance_edge_map), dim=1)
 
         return input_semantics, data['label']
 
@@ -236,13 +227,18 @@ class Pix2PixModel(torch.nn.Module):
         z = self.reparameterize(mu, logvar)
         return z, mu, logvar
 
-    def generate_fake(self, input_semantics, real_image, compute_kld_loss=False):
+    def generate_fake(self, input_semantics, real_image, compute_kld_loss=False, shift=0):
         z = None
         KLD_loss = None
-        if self.opt.use_vae:
+        if self.opt.use_vae and real_image is not None:
             z, mu, logvar = self.encode_z(real_image)
             if compute_kld_loss:
                 KLD_loss = self.KLDLoss(mu, logvar) * self.opt.lambda_kld
+        if real_image is None and isinstance(shift, float):
+            z = torch.zeros([input_semantics.size(0), self.opt.z_dim],
+                            dtype=torch.float32, device=input_semantics.device)
+            # print(shift)
+            z[:, :] = z[:, :] + shift
 
         fake_image = self.netG(input_semantics, z=z)
 

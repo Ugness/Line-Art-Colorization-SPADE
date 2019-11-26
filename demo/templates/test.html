@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Draw</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }} ">
+        <link rel="shortcut icon" href="">
+    </head>
+    <body>
+        <div class="top-bar">
+            <button id="save-btn">Save</button>
+            <button id="undo-btn">Undo</button>
+            <button id="clear-btn">Clear</button>
+            <button id="load-btn">Load Sketch</button>
+            <button id="load-default">Load Default Sketch</button>
+            <button id="sim-btn">Sketch Simplification</button>
+            <button id="col-btn">Colorization</button>
+            <input type="color" id="color-picker">
+            <b>Brush size</b>
+            <input type="range" id="brush-size" min="1" max="50" value="10">
+            <b>Latent shift</b>
+            <input type="number" id="latent-shift" value="0.0" step="any">
+            <b>Stochastic</b>
+            <input type="range" id="is-deter" min="0" max="1" value="0" step="1">
+            <b>Deterministic</b>
+            <input type="file" id="files" name="files[]" style="display:none"/>
+        </div>
+
+        <div class = "split left">
+            <div class = "container">
+                <div class="btn_group">
+                    <button autofocus class="switch-button" id="toSketch">SKETCH</button>
+                    <button class="switch-button" id="toHint">HINT</button>
+                </div>
+                <canvas class="draw" id="sketch"></canvas>
+                <canvas class="draw" id="hint"></canvas>
+            </div>
+        </div>
+
+        <div class="split right">
+            <div class = "container">
+                <canvas class="draw" id="result"></canvas>
+            </div>
+        </div>
+    </body>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='js/draw.js') }}"></script>
+</html>

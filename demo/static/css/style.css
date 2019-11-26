@@ -1,0 +1,101 @@
+body {
+    margin: 0;
+    background-color: white;
+}
+
+.top-bar {
+    /*display: flex;*/
+    /*flex-direction: row;*/
+    background-color: #3af;
+    border-bottom: 2px solid black;
+    /*position: absolute;*/
+    width: 100%;
+}
+
+.top-bar * {
+    margin: 5px 10px;
+}
+
+/* Split the screen in half */
+.split {
+    height: 100%;
+    width: 50%;
+    position: fixed;
+    z-index: 1;
+    overflow-x: hidden;
+    padding-top: 0;
+    display: inline-block;
+}
+
+/* Control the left side */
+.left {
+  left: 0;
+}
+
+/* Control the right side */
+.right {
+  right: 0;
+}
+
+/* If you want the content centered horizontally and vertically */
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.container {
+    margin: 1vw;
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.btn_group {
+    height: 3em;
+}
+
+.switch-button {
+    background-color: #555555;
+    text-decoration: none;
+    color: #ffffff;
+    line-height: 3em;
+    display: block;
+    float:left;
+    padding-left: 10px;
+    padding-right: 10px;
+
+    width: 40%;
+}
+
+.switch-button.selected
+{
+    background-color: #00e0e0;
+}
+
+.draw {
+    margin-top: 2em;
+    width: 80%;
+    outline: solid;
+    display: block;
+    position: absolute;
+    background-color: transparent;
+}
+
+#sketch {
+    z-index: 2;
+}
+
+#hint {
+    z-index: 3;
+    pointer-events: none;
+}
+
+#result {
+    margin-top: 5em;
+}
