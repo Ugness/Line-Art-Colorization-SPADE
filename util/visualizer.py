@@ -21,7 +21,6 @@ class Visualizer():
     def __init__(self, opt):
         self.opt = opt
         self.tf_log = opt.isTrain and opt.tf_log
-        self.use_html = opt.isTrain and not opt.no_html
         self.win_size = opt.display_winsize
         self.name = opt.name
         if self.tf_log:
@@ -29,11 +28,6 @@ class Visualizer():
             self.log_dir = os.path.join(opt.checkpoints_dir, opt.name, 'logs')
             self.writer = SummaryWriter(self.log_dir)
 
-        if self.use_html:
-            self.web_dir = os.path.join(opt.checkpoints_dir, opt.name, 'web')
-            self.img_dir = os.path.join(self.web_dir, 'images')
-            print('create web directory %s...' % self.web_dir)
-            util.mkdirs([self.web_dir, self.img_dir])
         if opt.isTrain:
             self.log_name = os.path.join(opt.checkpoints_dir, opt.name, 'loss_log.txt')
             with open(self.log_name, "a") as log_file:
@@ -53,46 +47,6 @@ class Visualizer():
             for label, image_numpy in visuals_tensor.items():
                 self.writer.add_images(label, image_numpy, step)
             self.writer.flush()
-
-        if self.use_html:  # save images to a html file
-            for label, image_numpy in visuals.items():
-                if isinstance(image_numpy, list):
-                    for i in range(len(image_numpy)):
-                        img_path = os.path.join(self.img_dir, 'epoch%.3d_iter%.3d_%s_%d.png' % (epoch, step, label, i))
-                        util.save_image(image_numpy[i], img_path)
-                else:
-                    img_path = os.path.join(self.img_dir, 'epoch%.3d_iter%.3d_%s.png' % (epoch, step, label))
-                    if len(image_numpy.shape) >= 4:
-                        image_numpy = image_numpy[0]
-                    util.save_image(image_numpy, img_path)
-
-            # update website
-            webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, refresh=5)
-            for n in range(epoch, 0, -1):
-                webpage.add_header('epoch [%d]' % n)
-                ims = []
-                txts = []
-                links = []
-
-                for label, image_numpy in visuals.items():
-                    if isinstance(image_numpy, list):
-                        for i in range(len(image_numpy)):
-                            img_path = 'epoch%.3d_iter%.3d_%s_%d.png' % (n, step, label, i)
-                            ims.append(img_path)
-                            txts.append(label + str(i))
-                            links.append(img_path)
-                    else:
-                        img_path = 'epoch%.3d_iter%.3d_%s.png' % (n, step, label)
-                        ims.append(img_path)
-                        txts.append(label)
-                        links.append(img_path)
-                if len(ims) < 10:
-                    webpage.add_images(ims, txts, links, width=self.win_size)
-                else:
-                    num = int(round(len(ims) / 2.0))
-                    webpage.add_images(ims[:num], txts[:num], links[:num], width=self.win_size)
-                    webpage.add_images(ims[num:], txts[num:], links[num:], width=self.win_size)
-            webpage.save()
 
     # errors: dictionary of error labels and values
     def plot_current_errors(self, errors, step):
