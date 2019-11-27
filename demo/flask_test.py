@@ -54,19 +54,19 @@ def sum():
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
-    hint_name = './data/hint/hint_' + timestamp + '.png'
+    hint_name = os.path.join(log_dir, 'hint/hint_' + timestamp + '.png')
     with open(hint_name, 'wb') as f:
         f.write(hintdata)
         f.close()
 
     line = request.form.get("line")
     linedata = base64.b64decode(line.split(',')[1])
-    line_name = './data/line/line_' + timestamp + '.png'
+    line_name = os.path.join(log_dir, 'line/line_' + timestamp + '.png')
     with open(line_name, 'wb') as f:
         f.write(linedata)
         f.close()
 
-    output_name = './data/output/output_' + timestamp + '.png'
+    output_name = os.path.join(log_dir, 'output/output_' + timestamp + '.png')
 
     # line = Image.open('../../CS470_Project/data/safebooru/test_upper_body_768/line/original/2329616.jpg').convert('L')
     hint = Image.open(io.BytesIO(hintdata)).convert("RGBA")
@@ -111,7 +111,7 @@ def sum():
 
 @app.route("/default/", methods=['POST'])
 def default():
-    f_name = './data/default/default_yoomi.png'
+    f_name = os.path.join(log_dir, 'default/default_yoomi.png')
     with open(f_name, 'rb') as f:
         output = base64.b64encode(f.read()).decode("utf-8")
         f.close()
@@ -132,7 +132,7 @@ def simplification():
     prefix = line.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
 
-    f_name = './data/line/line_' + timestamp + '.png'
+    f_name = os.path.join(log_dir, 'line/line_' + timestamp + '.png')
     with open(f_name, 'wb') as f:
         f.write(imgdata)
         f.close()
@@ -162,7 +162,7 @@ def simplification():
     with torch.no_grad():
         sketch = ((F.to_tensor(sketch) - immean) / imstd).unsqueeze(0).to(device)
         pred = simp_model.forward(sketch)
-        f_name = './data/simplified/simplified_' + timestamp + '.png'
+        f_name = os.path.join(log_dir, 'simplified/simplified_' + timestamp + '.png')
         F.to_pil_image(pred[0].cpu()).save(f_name)
     with open(f_name, 'rb') as f:
         output = base64.b64encode(f.read()).decode("utf-8")
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     else:
         device = 'cpu'
     print("Loading Models ....")
-
+    log_dir = './data/default'
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed_all(opt.seed)
     np.random.seed(opt.seed)
@@ -206,9 +206,9 @@ if __name__ == "__main__":
     graph = tf.get_default_graph()
 
     print("Loading Models Done")
-    os.makedirs('./data/hint', exist_ok=True)
-    os.makedirs('./data/output', exist_ok=True)
-    os.makedirs('./data/simplified', exist_ok=True)
-    os.makedirs('./data/line', exist_ok=True)
+    os.makedirs(os.path.join(log_dir, 'hint'), exist_ok=True)
+    os.makedirs(os.path.join(log_dir, 'output'), exist_ok=True)
+    os.makedirs(os.path.join(log_dir, 'simplified'), exist_ok=True)
+    os.makedirs(os.path.join(log_dir, 'line'), exist_ok=True)
 
-    app.run(host='0.0.0.0', port=opt.port, debug=True)
+    app.run(host='0.0.0.0', port=opt.port, debug=False)
