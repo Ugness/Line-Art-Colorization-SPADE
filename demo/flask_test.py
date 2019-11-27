@@ -183,7 +183,7 @@ if __name__ == "__main__":
     else:
         device = 'cpu'
     print("Loading Models ....")
-    log_dir = './data/default'
+    log_dir = './data'
     torch.manual_seed(opt.seed)
     torch.cuda.manual_seed_all(opt.seed)
     np.random.seed(opt.seed)
