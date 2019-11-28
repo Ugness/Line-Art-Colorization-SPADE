@@ -14,7 +14,10 @@
             <button id="load-btn">Load Sketch</button>
             <button id="load-default">Load Default Sketch</button>
             <button id="sim-btn">Sketch Simplification</button>
+            <button id="load-reference">Load Reference</button>
             <button id="col-btn">Colorization</button>
+        </div>
+        <div class="top-bar">
             <input type="color" id="color-picker">
             <b>Brush size</b>
             <input type="range" id="brush-size" min="1" max="50" value="10">
@@ -23,7 +26,11 @@
             <b>Stochastic</b>
             <input type="range" id="is-deter" min="0" max="1" value="0" step="1">
             <b>Deterministic</b>
-            <input type="file" id="files" name="files[]" style="display:none"/>
+            <b>Reference: ON</b>
+            <input type="range" id="is-reference" min="0" max="1" value="0" step="1">
+            <b>OFF</b>
+            <input type="file" id="sketch-file" style="display:none"/>
+            <input type="file" id="reference-file" style="display:none"/>
         </div>
 
         <div class = "split left">
@@ -34,6 +41,7 @@
                 </div>
                 <canvas class="draw" id="sketch"></canvas>
                 <canvas class="draw" id="hint"></canvas>
+                <canvas id="reference"></canvas>
             </div>
         </div>
 

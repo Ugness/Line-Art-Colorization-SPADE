@@ -7,7 +7,6 @@ body {
     /*display: flex;*/
     /*flex-direction: row;*/
     background-color: #3af;
-    border-bottom: 2px solid black;
     /*position: absolute;*/
     width: 100%;
 }
@@ -48,12 +47,6 @@ body {
 
 .container {
     margin: 1vw;
-    display: inline-block;
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
 }
 
 .btn_group {
@@ -70,7 +63,7 @@ body {
     padding-left: 10px;
     padding-right: 10px;
 
-    width: 40%;
+    width: 30%;
 }
 
 .switch-button.selected
@@ -80,7 +73,7 @@ body {
 
 .draw {
     margin-top: 2em;
-    width: 80%;
+    width: 60%;
     outline: solid;
     display: block;
     position: absolute;
@@ -98,4 +91,15 @@ body {
 
 #result {
     margin-top: 5em;
+}
+
+#reference {
+    z-index: 2;
+    margin-top: 2em;
+    margin-left: 65%;
+    width: 30%;
+    outline: solid;
+    display: block;
+    position: absolute;
+    background-color: transparent;
 }

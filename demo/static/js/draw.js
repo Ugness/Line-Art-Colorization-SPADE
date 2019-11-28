@@ -17,7 +17,9 @@ let canvasArray = Array(canvasCount),
     currentStroke = null,
     sketchImage = null,
     colorImage = null,
-    colorCanvas = null;
+    colorCanvas = null,
+    referenceCanvas = null,
+    referenceImage = null;
 
 function redraw () {
     for (let c = 0 ; c < canvasCount ; c++) {
@@ -51,6 +53,17 @@ function redraw () {
             }
             ctx.stroke();
         }
+    }
+
+    if (referenceImage != null) {
+        let canvas = referenceCanvas.canvas[0];
+        let ctx = referenceCanvas.ctx;
+        let w = referenceCanvas.canvas[0].width;
+        let old_style = ctx.fillStyle;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0,0,w,w);
+        ctx.fillStyle = old_style;
+        scaletoFit(referenceImage, canvas, ctx);
     }
 }
 
@@ -87,6 +100,17 @@ function init () {
         height: innerWidth < innerHeight ? innerWidth : innerHeight,
     });
     colorCanvas.ctx = colorCanvas.canvas[0].getContext('2d');
+
+    referenceCanvas = {
+        canvas: $('#reference'),
+        ctx: null,
+    };
+
+    referenceCanvas.canvas.attr({
+        width: innerWidth < innerHeight ? innerWidth : innerHeight,
+        height: innerWidth < innerHeight ? innerWidth : innerHeight,
+    });
+    referenceCanvas.ctx = referenceCanvas.canvas[0].getContext('2d');
 
     function mouseEvent (e) {
         let canvas = canvasArray[currentCanvas.Value].canvas;
@@ -191,8 +215,13 @@ function init () {
     addEventListeners();
 
     $('#load-btn').click(function(){
-        $('#files').click();
+        $('#sketch-file').click();
     });
+
+    $('#load-reference').click(function(){
+        $('#reference-file').click();
+    });
+
 
     $('#save-btn').click(function () {
         let element = document.createElement('a');
@@ -211,7 +240,8 @@ function init () {
     });
 
     $('#clear-btn').click(function () {
-        $('#files').val("");
+        $('#sketch-file').val("");
+        $('#reference-file').val("");
         canvasArray[currentCanvas.Value].strokes = [];
         if (currentCanvas.Value === 0) sketchImage = null;
         redraw();
@@ -318,7 +348,7 @@ function scaletoFit(img, canvas, ctx){
     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
 }
 
-function handleFileSelect(evt) {
+function handleSketchSelect(evt) {
     var files = evt.target.files; // FileList object
 
     // Loop through the FileList and render image files as thumbnails.
@@ -337,5 +367,26 @@ function handleFileSelect(evt) {
     reader.readAsDataURL(f);
   }
 
+function handleReferenceSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    var reader = new FileReader();
+    f = files[0];
+      // Closure to capture the file information.
+      reader.onload = (function() {
+          return function(e) {
+              console.log("Reference");
+              referenceImage = new Image;
+              referenceImage.src = e.target.result;
+              referenceImage.onload = redraw;
+          };
+      })(f);
+
+      // Read in the image file as a data URL.
+    reader.readAsDataURL(f);
+}
+
 $(init);
-document.getElementById('files').addEventListener('change', handleFileSelect, false);
+document.getElementById('sketch-file').addEventListener('change', handleSketchSelect, false);
+document.getElementById('reference-file').addEventListener('change', handleReferenceSelect, false);
