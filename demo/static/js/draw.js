@@ -14,6 +14,7 @@ let canvasArray = Array(canvasCount),
         value: 0.0,
     },
     isDeter = 0,
+    isRefer = 0,
     currentStroke = null,
     sketchImage = null,
     colorImage = null,
@@ -286,6 +287,10 @@ function init () {
         isDeter = this.value;
     });
 
+    $('#is-reference').on('input', function(){
+        isRefer = this.value;
+    });
+
     $('#col-btn').click(function(){
         $.ajax({
             url: '/colorization/',
@@ -295,7 +300,9 @@ function init () {
                     'height': canvasArray[1].canvas[0].height,
                     'line': canvasArray[0].canvas[0].toDataURL(),
                     'z': latent_shift.value,
-                    'isDeter': isDeter},
+                    'isDeter': isDeter,
+                    'isRefer': isRefer,
+                    'refer': referenceCanvas.canvas[0].toDataURL()},
             method: 'POST',
             success: function(data) {
                 console.log('color data came!');

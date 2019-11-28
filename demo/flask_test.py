@@ -51,6 +51,7 @@ def sum():
     height = int(float(request.form.get("height")))
     z = float(request.form.get("z"))
     isDeter = float(request.form.get("isDeter")) > 0.5
+    isRefer = float(request.form.get("isRefer")) > 0.5
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
