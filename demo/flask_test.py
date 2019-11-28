@@ -113,10 +113,10 @@ def sum():
     with torch.no_grad():
         color_img = model(data, 'demo')
     color_img = util.tensor2im(color_img)
-    color_img = color_img[0]
-    # color_img = process.resize_img(color_img[0], size=width, pad_value=255, mode='bilinear')
-    # line = process.resize_img(line, size=width, pad_value=255, mode='bicubic')
-    # color_img = (line * (1-line/255) + color_img * (line/255)).astype(np.uint8)
+    # color_img = color_img[0]
+    color_img = process.resize_img(color_img[0], size=width, pad_value=255, mode='bilinear')
+    line = process.resize_img(line, size=width, pad_value=255, mode='bicubic')
+    color_img = (line * (1-line/255) + color_img * (line/255)).astype(np.uint8)
     util.save_image(color_img, output_name, create_dir=True)
 
     # for test
