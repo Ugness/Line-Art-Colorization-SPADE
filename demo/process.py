@@ -40,6 +40,8 @@ def resize_img(img, size=768, pad_value=255, mode='nearest'):
         interpolation = cv2.INTER_NEAREST
     elif mode == 'bilinear':
         interpolation = cv2.INTER_LINEAR
+    elif mode == 'bicubic':
+        interpolation = cv2.INTER_CUBIC
     else:
         print("Select Mode nearest/bilinear")
         assert False
@@ -70,7 +72,7 @@ def denormalize(image):
     return (image * 0.5) + 0.5
 
 
-def getitem(line, hint):
+def getitem(line, hint, refer=None):
     # Assuming hint_img / line_img already re-sized.
 
     hint_img = np.array(hint)
@@ -85,9 +87,12 @@ def getitem(line, hint):
     line_img = F.to_tensor(line_img)
     hint_img[1:, :, :] = normalize(hint_img[1:, :, :])
     line_img = normalize(line_img)
+    if refer is not None:
+        refer = F.to_tensor(refer)
+        refer = normalize(refer).unsqueeze(0).float()
 
     # Fit to SPADE
-    real_image = None
+    real_image = refer
     sketch_tensor = line_img
     image_path = None
 

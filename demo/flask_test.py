@@ -51,7 +51,7 @@ def sum():
     height = int(float(request.form.get("height")))
     z = float(request.form.get("z"))
     isDeter = float(request.form.get("isDeter")) > 0.5
-    isRefer = float(request.form.get("isRefer")) > 0.5
+    isRefer = float(request.form.get("isRefer")) < 0.5
     hintdata = base64.b64decode(rgba.split(',')[1])
     prefix = rgba.split(',')[0]
     timestamp = strftime("%Y%m%d%H%M%S", gmtime())
@@ -66,18 +66,28 @@ def sum():
     with open(line_name, 'wb') as f:
         f.write(linedata)
         f.close()
+    refer = request.form.get("refer")
+    referdata = base64.b64decode(refer.split(',')[1])
+    refer_name = os.path.join(log_dir, 'refer/refer_' + timestamp + '.png')
+    with open(refer_name, 'wb') as f:
+        f.write(referdata)
+        f.close()
 
     output_name = os.path.join(log_dir, 'output/output_' + timestamp + '.png')
 
     # line = Image.open('../../CS470_Project/data/safebooru/test_upper_body_768/line/original/2329616.jpg').convert('L')
     hint = Image.open(io.BytesIO(hintdata)).convert("RGBA")
     line = Image.open(io.BytesIO(linedata)).convert("L")
+    refer = Image.open(io.BytesIO(referdata)).convert("RGB")
+
     line.save(line_name)
     hint.save(hint_name)
+    refer.save(refer_name)
 
     hint = np.array(hint)  # RGBA
 
     line = np.array(line)  # RGBA -> L
+    refer = np.array(refer)
     line = np.expand_dims(line, axis=2)
 
     # RGBA to mask + hint
@@ -85,20 +95,29 @@ def sum():
     hint = hint[:, :, [0, 1, 2]]
 
     # Resize
-    line = process.resize_img(line, size=256, pad_value=255, mode='nearest')
+    small_line = process.resize_img(line, size=256, pad_value=255, mode='nearest')
     hint = process.resize_img(hint, size=256, pad_value=0, mode='bilinear')
     mask = process.resize_img(mask, size=256, pad_value=0, mode='bilinear')
+    if isRefer:
+        refer = process.resize_img(refer, size=256, pad_value=255, mode='bilinear')
+    else:
+        refer = None
 
     hint = np.concatenate([hint, mask], axis=2)
 
-    data = process.getitem(line, hint)
+    data = process.getitem(small_line, hint, refer)
     data['shift'] = z
+    data['isDeter'] = ['isDeter']
     if not isDeter:
         data['shift'] = 'random'
     with torch.no_grad():
         color_img = model(data, 'demo')
     color_img = util.tensor2im(color_img)
-    util.save_image(color_img[0], output_name, create_dir=True)
+    color_img = color_img[0]
+    # color_img = process.resize_img(color_img[0], size=width, pad_value=255, mode='bilinear')
+    # line = process.resize_img(line, size=width, pad_value=255, mode='bicubic')
+    # color_img = (line * (1-line/255) + color_img * (line/255)).astype(np.uint8)
+    util.save_image(color_img, output_name, create_dir=True)
 
     # for test
     f_name = output_name
@@ -211,5 +230,6 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(log_dir, 'output'), exist_ok=True)
     os.makedirs(os.path.join(log_dir, 'simplified'), exist_ok=True)
     os.makedirs(os.path.join(log_dir, 'line'), exist_ok=True)
+    os.makedirs(os.path.join(log_dir, 'refer'), exist_ok=True)
 
-    app.run(host='0.0.0.0', port=opt.port, debug=False)
+    app.run(host='0.0.0.0', port=opt.port, debug=True)
