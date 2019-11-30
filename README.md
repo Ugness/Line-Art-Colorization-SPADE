@@ -107,7 +107,7 @@ optional arguments:
   ```
 ## Deploy Demo
 - You can make a demo server with demo/flask_test.py
-- flask_test.py will use 0.0.0.0.
+- flask_test.py will use 0.0.0.0. You can change port with --port option.
 - You should give a directory of pretrained sketchKeras and sketch simplification model with -sk, -s option.
 ```
 python flask_test.py -s utils/preprocessing/sketch_simplification/model.pth --gpu_ids 0 --netG spadeladder --name test --checkpoints_dir checkpoints -sk utils/sketchKeras/mod.h5 --use_vae --port PORT
