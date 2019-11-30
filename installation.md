@@ -1,6 +1,6 @@
 Required version of packages
 
-```javascript
+```
 CUDA 10.1
 Keras 2.2.5
 tensorboard 1.15.0
