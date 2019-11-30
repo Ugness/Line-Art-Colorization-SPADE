@@ -23,6 +23,7 @@ sys.argv = "compare_test.py --checkpoints_dir ../CS470_Project/checkpoints --nam
 opt = TestOptions().parse()
 sys.argv = "compare_test.py --checkpoints_dir ../CS470_Project/checkpoints --name no_Lnet --dataset_mode safebooru --dataroot ../CS470_Project/data/safebooru/test_upper_body_768 --batchSize 8 --gpu_ids 0 --use_vae --netG spade".split(" ")
 opt2 = TestOptions().parse()
+opt.sample_Ps = [2, 22, 2]
 dataloader = dataloader.SafebooruDataLoader(opt)
 
 model = Pix2PixModel(opt)
@@ -54,10 +55,15 @@ with torch.no_grad():
         generated = model(data_i, mode='inference')
 
         img_path = data_i['path']
+        hint = data_i['instance'][:, [1, 2, 3, ], :, :]
+        mask = (data_i['instance'][:, [0, ], :, :] > 0).float()
+        color = data_i['label']
+        hint_map = mask * hint + color * 0.3 * (1 - mask)
         for b in range(generated.shape[0]):
             print('process image... %s' % img_path[b])
             visuals = OrderedDict([('input_label', data_i['label'][b]),
-                                   ('synthesized_image', generated[b])])
+                                   ('synthesized_image', generated[b]),
+                                   ('hint', hint_map[b])])
             visualizer.save_images(webpage, visuals, img_path[b:b + 1])
 
         generated = model_noLnet(data_i, mode='inference')
@@ -66,7 +72,8 @@ with torch.no_grad():
         for b in range(generated.shape[0]):
             print('process image... %s' % img_path[b])
             visuals = OrderedDict([('input_label', data_i['label'][b]),
-                                   ('synthesized_image', generated[b])])
+                                   ('synthesized_image', generated[b]),
+                                   ('hint', hint_map[b])])
             vis2.save_images(webpage2, visuals, img_path[b:b + 1])
 
 webpage.save()
