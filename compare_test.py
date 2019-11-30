@@ -57,8 +57,7 @@ with torch.no_grad():
         img_path = data_i['path']
         hint = data_i['instance'][:, [1, 2, 3, ], :, :]
         mask = (data_i['instance'][:, [0, ], :, :] > 0).float()
-        color = data_i['label']
-        hint_map = mask * hint + color * 0.3 * (1 - mask)
+        hint_map = mask * hint + data_i['image'] * (1 - mask)
         for b in range(generated.shape[0]):
             print('process image... %s' % img_path[b])
             visuals = OrderedDict([('input_label', data_i['label'][b]),
