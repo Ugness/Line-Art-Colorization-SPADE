@@ -1,7 +1,7 @@
 # CS470_Project
 ![teaser](md/demo.png)
 ### Acknowldegements
-- We used code from SPADE
+- We used code from https://github.com/NVlabs/SPADE
   - Please follow LICENSE.md
 - utils/sketchKeras
   - We used code from https://github.com/lllyasviel/sketchKeras
