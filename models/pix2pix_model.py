@@ -7,7 +7,6 @@ import torch
 import torch.nn.functional as F
 import models.networks as networks
 import util.util as util
-from util.optimizer import RAdam
 
 
 class Pix2PixModel(torch.nn.Module):
@@ -92,9 +91,6 @@ class Pix2PixModel(torch.nn.Module):
 
         optimizer_G = torch.optim.Adam(G_params, lr=G_lr, betas=(beta1, beta2))
         optimizer_D = torch.optim.Adam(D_params, lr=D_lr, betas=(beta1, beta2))
-        if opt.radam:
-            optimizer_G = RAdam(G_params, lr=G_lr, betas=(beta1, beta2))
-            optimizer_D = RAdam(D_params, lr=D_lr, betas=(beta1, beta2))
         if opt.SGDR:
             scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer_G, 1, T_mult=8)
 

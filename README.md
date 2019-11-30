@@ -1,5 +1,17 @@
 # CS470_Project
 ![teaser](md/demo.png)
+### Acknowldegements
+- We used code from SPADE
+  - Please follow LICENSE.md
+- utils/sketchKeras
+  - We used code from https://github.com/lllyasviel/sketchKeras
+  - Please follow utils/sketchKeras/LICENSE
+- utils/preprocessing/sketch_simplification
+  - We used code from https://github.com/bobbens/sketch_simplification
+  - Please follow utils/preprocessing/sketch_simplification/LICENSE
+- dataloader/
+  - We referred https://github.com/bobbens/sketch_simplification
+  - Please follow dataloader/LICENSE
 # Contents
 - Installation
 - Preparing Dataset

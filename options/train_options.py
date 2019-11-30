@@ -53,7 +53,6 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--L1_loss', action='store_true', help='if specified, use L1 matching loss')
         parser.add_argument('--hsv_tv', action='store_true', help='if specified, use Total variation loss')
         parser.add_argument('--high_sv', action='store_true', help='if specified, use High SV loss')
-        parser.add_argument('--radam', action='store_true', help='if specified, use RAdam')
         parser.add_argument('--gan_mode', type=str, default='hinge', help='(ls|original|hinge)')
         parser.add_argument('--netD', type=str, default='multiscale', help='(n_layers|multiscale|image)')
         parser.add_argument('--lambda_kld', type=float, default=0.05)
