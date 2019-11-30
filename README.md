@@ -1,4 +1,4 @@
-# CS470_Project
+# Line-Art-Colorization-SPADE
 ![teaser](md/demo.png)
 ### Acknowldegements
 - We used code from https://github.com/NVlabs/SPADE
