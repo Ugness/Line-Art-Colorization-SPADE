@@ -1,4 +1,5 @@
 # CS470_Project
+![teaser](md/demo.png)
 # Contents
 - Installation
 - Preparing Dataset
