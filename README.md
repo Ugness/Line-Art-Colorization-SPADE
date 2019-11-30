@@ -10,7 +10,7 @@
   - We used code from https://github.com/bobbens/sketch_simplification
   - Please follow utils/preprocessing/sketch_simplification/LICENSE
 - dataloader/
-  - We referred https://github.com/bobbens/sketch_simplification
+  - We referred https://github.com/richzhang/colorization-pytorch
   - Please follow dataloader/LICENSE
 # Contents
 - Installation
