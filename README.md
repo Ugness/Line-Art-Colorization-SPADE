@@ -14,8 +14,10 @@
   - Please follow dataloader/LICENSE
 # Contents
 - Installation
+- Using Pretrained Network
 - Preparing Dataset
 - Training
+- Testing
 - Deploy Demo
 ## Installation
 ```
@@ -33,6 +35,9 @@ torchvision 0.4.0
 ```
 pip install -r requirements.txt
 ```
+## Using Pretrained Network
+- Download all the files from https://drive.google.com/drive/folders/1aCSQNa9dBKLZycKm3EwNuVXBUSPWC1JB?usp=sharing
+- And place them under checkpoints/[EXP_NAME]/.
 ## Preparing Dataset
 ### Safebooru csv download
 - Get safebooru metadata and url CSV from https://www.kaggle.com/alamson/safebooru/download
