@@ -38,6 +38,10 @@ pip install -r requirements.txt
 ## Using Pretrained Network
 - Download all the files from https://drive.google.com/drive/folders/1aCSQNa9dBKLZycKm3EwNuVXBUSPWC1JB?usp=sharing
 - And place them under checkpoints/[EXP_NAME]/.
+- This model uses
+```
+--netG spadeladder
+```
 ## Preparing Dataset
 ### Safebooru csv download
 - Get safebooru metadata and url CSV from https://www.kaggle.com/alamson/safebooru/download
